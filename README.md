@@ -1,4 +1,4 @@
-# 🧵 Karigar — the artisan's only interface is their voice
+# Karigar — the artisan's only interface is their voice
 
 **Meesho ScriptedByHer 2.0 · Build for Bharat with the power of Agentic AI**
 
@@ -10,9 +10,9 @@ warm spoken messages in their own language.
 
 ---
 
-## 🌐 Live deployment
+## Live deployment
 
-**▶️ Open the app → https://karigar-577066629459.asia-south1.run.app/v2**
+**Open the app → https://karigar-577066629459.asia-south1.run.app/v2**
 
 That's the landing page. Click **Live Demo** to open the WhatsApp-style Demo
 Console; the Meesho-styled shop is reachable from there too.
@@ -21,13 +21,13 @@ Hosted on **GCP Cloud Run** (`asia-south1`), always-on (`--min-instances 1
 --no-cpu-throttling`) so background agent jobs finish after the webhook returns.
 No login required.
 
-### 🎥 Demo walkthrough video (how to use)
+### Demo walkthrough video (how to use)
 
-**▶️ Watch → https://drive.google.com/file/d/1SYRpFxcxgZYc0oREhemL0XW4vM3DBdTx/view?usp=sharing**
+**Watch → https://drive.google.com/file/d/1SYRpFxcxgZYc0oREhemL0XW4vM3DBdTx/view?usp=sharing**
 
 Also available in-app: click **"How it works"** on the landing page.
 
-### 🖼️ Test images for judges
+### Test images for judges
 
 **Folder → https://github.com/AishitaKumar/ScriptedbyHer_KARIGAR_AishitaKumar_TIET/tree/main/test_images**
 
@@ -36,7 +36,7 @@ artworks, fake/factory-print artworks, dummy PAN cards and bank passbooks
 (including deliberately blurred and partially-cropped ones), and random
 unrelated images — so you can try both the happy path and the adversarial cases.
 
-> **⚠️ Important — before entering a GSTIN in the prototype:** only specific
+> **Important — before entering a GSTIN in the prototype:** only specific
 > seeded GSTINs verify (by design — random numbers will not work). Read
 > **`https://drive.google.com/file/d/1rkprPwUa00EOZ7t-FwgEkVn46bGMHvMM/view?usp=sharing`** first for the valid GSTINs and
 > why this is mocked this way.
@@ -101,7 +101,7 @@ Beside the chat, a **live agent-activity panel** shows every agent's raw JSON
 output as it runs.
 
 **Suggested run (end-to-end, all live):**
-1. Click **🙏 Naya Karigar** → pick a language (हिंदी / English).
+1. Click **Naya Karigar** → pick a language (हिंदी / English).
 2. Give a name and village by voice or text — each is read back and confirmed.
 3. **KYC first (seller account before cataloging):** send a PAN photo (name is
    OCR-anchored), then a passbook photo (name-matched to the PAN), a pickup
@@ -122,7 +122,7 @@ output as it runs.
 Every confirmation card (PAN, passbook, GSTIN, pincode, OTP) is **read aloud with
 each digit spoken individually** so numbers are never misheard.
 
-> **⚠️ Before entering a GSTIN:** only specific seeded GSTINs verify — see the
+> **Before entering a GSTIN:** only specific seeded GSTINs verify — see the
 > **Test images for judges** note above for the valid list and the reasoning.
 
 ---
@@ -145,7 +145,7 @@ cp .env.example .env                    # fill OPENAI_API_KEY, SUPABASE_URL, SUP
 # In the Supabase SQL editor, run in order:
 #   app/db/schema.sql
 #   app/db/migrations/002_artisan_context.sql  →  007_market_demand.sql
-# In Supabase Storage, create a PUBLIC bucket named  media
+# In Supabase Storage, create a PUBLIC bucket named "media"
 
 uvicorn app.main:app --port 8000
 # open http://127.0.0.1:8000/v2/demo
@@ -290,6 +290,36 @@ directly with them.
 - The in-process job queue and console outbox mean a single Cloud Run instance
   (`--max-instances 1`); the production swap is Cloud Tasks + Redis.
 - Authenticity Engine Layers 4–5 are designed and documented, not built.
+
+---
+
+## Future work
+
+The architecture was built so each of these is an extension, not a rewrite.
+
+**1. More languages.** `language_code` is already threaded through the entire
+pipeline (STT → agents → TTS → copy), so adding **Bengali and Tamil** — then the
+other major Indian languages — is prompts + message copy, not engineering. The
+বাংলা/தமிழ் buttons already exist behind a graceful coming-soon.
+
+**2. Real GI authentication.** Today the GI craft knowledge is a curated table
+and authenticity is Vision forensics. Next is a genuine **GI verification
+process**: integrating with GI registry / cooperative data to confirm a seller
+belongs to a recognised GI cluster, and completing Authenticity Engine Layers
+4–5 — **duplicate detection** (pgvector embedding match across sellers, since
+handmade pieces are never pixel-identical) and **behavioral signals** (volume
+anomaly caps, geo consistency, return-reason feedback, SHG/NGO attestation).
+
+**3. Production hardening — swap the mocks for real APIs.** Every external
+boundary already sits behind a swap-ready interface:
+- **Meesho Seller API** in place of the mock, once a registered seller account is
+  provisioned (Karigar's code only ever calls `app/services/meesho.py`).
+- **GST portal** enrolment via the documented Playwright form-filler that pauses
+  at the real OTP step, replacing the mock enrolment.
+- **Cloud Tasks + Redis** for the job queue and outbox, lifting the single-instance
+  limit to horizontal scale.
+- **WhatsApp Cloud API at scale** (beyond the test number's whitelist), plus
+  observability, rate-limit handling, and cost monitoring for the OpenAI calls.
 
 ---
 
