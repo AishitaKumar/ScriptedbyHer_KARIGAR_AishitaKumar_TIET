@@ -6,7 +6,7 @@ import asyncio
 import logging
 
 from app.agentlog import log_event
-from app.agents import vision
+from app.agents import photo, vision
 from app.db import queries
 from app.db.client import upload_media
 from app.flows import kyc
@@ -14,7 +14,7 @@ from app.flows.common import incoming_text, say, validate_answer, yes_no_buttons
 from app.flows.messages import t
 from app.jobs.queue import enqueue
 from app.llm import LLMError
-from app.pipeline import build_listing_package
+from app.pipeline import build_listing_package, triage_batch
 from app.transports.base import Button, InboundMessage, Transport
 from app.voice.classify import classify_yes_no
 
@@ -364,9 +364,7 @@ async def _awaiting_redo_choice(artisan: dict, msg: InboundMessage, transport: T
         await queries.set_state(artisan["id"], "awaiting_custom_price")
         await say(transport, msg.sender, t("price_ask_new"), artisan_id=artisan["id"])
     elif reply in {"2", "redo_photos"} or "फोटो" in reply or "तस्वीर" in reply:
-        if listing_id:
-            await queries.update_listing(listing_id, {"status": "rejected"})
-        await queries.set_state(artisan["id"], "awaiting_photos", {"listing_id": None})
+        await queries.set_state(artisan["id"], "awaiting_replacement_photo")
         await say(transport, msg.sender, t("redo_photos"), artisan_id=artisan["id"])
     elif reply in {"3", "redo_keep"}:
         await preview.publish(artisan, msg.sender, transport)
@@ -402,8 +400,7 @@ async def _apply_freeform_edit(
         await queries.update_listing(listing_id, {"price": price, "original_price": int(price * 1.4)})
         await queries.set_state(artisan["id"], "awaiting_redo_choice", {"in_hand": in_hand_amount(price)})
     elif action == "redo_photos":
-        await queries.update_listing(listing_id, {"status": "rejected"})
-        await queries.set_state(artisan["id"], "awaiting_photos", {"listing_id": None})
+        await queries.set_state(artisan["id"], "awaiting_replacement_photo")
         await say(transport, msg.sender, t("redo_photos"), artisan_id=artisan["id"])
         return
     elif action == "edit_text":
@@ -427,6 +424,49 @@ async def _apply_freeform_edit(
     await preview.send_preview(artisan, msg.sender, transport)
 
 
+async def _awaiting_replacement_photo(artisan: dict, msg: InboundMessage, transport: Transport) -> None:
+    """Change-photo: take ONE new photo, check it's real, swap it into the existing
+    listing — title, price and size stay exactly as they were."""
+    if msg.type != "image" or not msg.media:
+        await say(transport, msg.sender, t("expect_photo"), artisan_id=artisan["id"])
+        return
+    await say(transport, msg.sender, t("processing"), voice=False, artisan_id=artisan["id"])
+    enqueue(_process_replacement_photo(
+        artisan, msg.sender, (msg.media, msg.media_mime or "image/jpeg"), transport),
+        name="photo-swap")
+
+
+async def _process_replacement_photo(
+    artisan: dict, sender: str, image: tuple[bytes, str], transport: Transport
+) -> None:
+    listing_id = artisan["context"].get("listing_id")
+    if not listing_id:  # safety: nothing to swap into
+        await say(transport, sender, t("error"), artisan_id=artisan["id"])
+        return
+    analyses = await vision.analyze_batch([image], artisan.get("language_code", "hi"))
+    triage = triage_batch(analyses)
+    log_event("pipeline", f"replacement photo → {triage['outcome']}", {"analyses": analyses})
+
+    if triage["outcome"] != "ok":  # same honest rejection reasons as the first upload
+        if triage["outcome"] == "rejected":
+            reason = (triage.get("reasons") or ["साफ़ नहीं दिख रहा"])[0]
+            await say(transport, sender, t("auth_reject", reason=reason), artisan_id=artisan["id"])
+        elif triage["outcome"] == "all_suspect":
+            await say(transport, sender, t("photo_suspect"), artisan_id=artisan["id"])
+        else:
+            no_craft = analyses and all((a.get("craft") in (None, "", "none")) for a in analyses)
+            await say(transport, sender, t("photo_not_craft") if no_craft else t("photo_fail"),
+                      artisan_id=artisan["id"])
+        return  # state stays awaiting_replacement_photo — she can try another photo
+
+    enhanced = await asyncio.to_thread(photo.enhance, image[0])
+    photo_url = upload_media(image[0], ".jpg", image[1], folder="photos")
+    enhanced_url = upload_media(enhanced, ".jpg", "image/jpeg", folder="enhanced")
+    await queries.update_listing(listing_id, {"photo_urls": [photo_url], "enhanced_photo_url": enhanced_url})
+    from app.flows import preview
+    await preview.send_preview(artisan, sender, transport)
+
+
 _HANDLERS = {
     "new": _new,
     "awaiting_language": _awaiting_language,
@@ -441,5 +481,6 @@ _HANDLERS = {
     "awaiting_custom_price": _awaiting_custom_price,
     "awaiting_preview_approval": _awaiting_preview_approval,
     "awaiting_redo_choice": _awaiting_redo_choice,
+    "awaiting_replacement_photo": _awaiting_replacement_photo,
 }
 

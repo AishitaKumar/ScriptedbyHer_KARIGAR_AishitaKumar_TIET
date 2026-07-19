@@ -21,7 +21,10 @@ MAX_SIDE = 1600
 BG_COLOR = (255, 255, 255)
 
 
-def enhance(image_bytes: bytes, remove_background: bool = True) -> bytes:
+# Keep the artisan's real photo (background + context) — a phone photo of a
+# physical object is the authenticity signal; only brighten/sharpen it. Background
+# removal stays available behind the flag but is off by default.
+def enhance(image_bytes: bytes, remove_background: bool = False) -> bytes:
     """Enhance a product photo. Synchronous & CPU-bound — call via asyncio.to_thread."""
     img = Image.open(io.BytesIO(image_bytes))
     img = ImageOps.exif_transpose(img)
