@@ -8,7 +8,7 @@ import logging
 from app.agentlog import log_event
 from app.agents import photo, vision
 from app.db import queries
-from app.db.client import upload_media
+from app.db.client import download_media, upload_media
 from app.flows import kyc
 from app.flows.common import incoming_text, say, validate_answer, yes_no_buttons
 from app.flows.messages import t
@@ -180,20 +180,30 @@ async def _process_batch(
     result = await build_listing_package(images, artisan.get("language_code", "hi"))
     log_event("pipeline", f"batch of {len(images)} → {result['outcome']}",
               {"analyses": result.get("analyses"), "listing": result.get("listing")})
+    await _finalize_listing_package(artisan, sender, images, result, transport)
 
+
+def _photo_reject_message(result: dict) -> str | None:
+    """Honest reason a photo batch is unusable, or None if it passed the gate."""
     if result["outcome"] == "rejected":
-        reason = (result.get("reasons") or ["साफ़ नहीं दिख रहा"])[0]
-        await say(transport, sender, t("auth_reject", reason=reason), artisan_id=artisan["id"])
-        return
+        return t("auth_reject", reason=(result.get("reasons") or ["साफ़ नहीं दिख रहा"])[0])
     if result["outcome"] == "all_suspect":
-        await say(transport, sender, t("photo_suspect"), artisan_id=artisan["id"])
-        return
+        return t("photo_suspect")
     if result["outcome"] == "all_failed":
         # "not a craft at all" needs a different nudge than "a craft, but blurry"
         analyses = result.get("analyses") or []
         no_craft = analyses and all((a.get("craft") in (None, "", "none")) for a in analyses)
-        await say(transport, sender, t("photo_not_craft") if no_craft else t("photo_fail"),
-                  artisan_id=artisan["id"])
+        return t("photo_not_craft") if no_craft else t("photo_fail")
+    return None
+
+
+async def _finalize_listing_package(
+    artisan: dict, sender: str, images: list[tuple[bytes, str]], result: dict, transport: Transport
+) -> None:
+    """Turn a successful pipeline result into a pending listing and ask for the size."""
+    reject = _photo_reject_message(result)
+    if reject:
+        await say(transport, sender, reject, artisan_id=artisan["id"])
         return
 
     if result["dropped_indices"]:
@@ -391,30 +401,40 @@ async def _apply_freeform_edit(
                                 "price": listing["price"]}}, ensure_ascii=False),
         what="listing.edit",
     )
-    log_event("orchestrator", f"listing edit → {result.get('action')}",
-              {"instruction": instruction, **result})
-    action = result.get("action")
+    log_event("orchestrator", "listing edit", {"instruction": instruction, **result})
 
-    if action == "set_price" and result.get("price"):
-        price = min(int(result["price"]), PRICE_CAP)
-        await queries.update_listing(listing_id, {"price": price, "original_price": int(price * 1.4)})
-        await queries.set_state(artisan["id"], "awaiting_redo_choice", {"in_hand": in_hand_amount(price)})
-    elif action == "redo_photos":
+    # Publish / redo-photos are whole-flow moves — handle them first.
+    if result.get("publish"):
+        await preview.publish(artisan, msg.sender, transport)
+        return
+    if result.get("redo_photos"):
         await queries.set_state(artisan["id"], "awaiting_replacement_photo")
         await say(transport, msg.sender, t("redo_photos"), artisan_id=artisan["id"])
         return
-    elif action == "edit_text":
-        patch = {k: result[k] for k in ("title", "description") if result.get(k)}
-        if patch:
-            await queries.update_listing(listing_id, patch)
-        if result.get("title_hi"):
-            await queries.set_state(artisan["id"], artisan["onboarding_state"],
-                                    {"title_hi": result["title_hi"]})
-            artisan["context"]["title_hi"] = result["title_hi"]
-    elif action == "publish":
-        await preview.publish(artisan, msg.sender, transport)
-        return
-    else:
+
+    # Apply every concrete change she gave — she may ask for several at once.
+    applied = False
+    if result.get("price"):
+        price = min(int(result["price"]), PRICE_CAP)
+        await queries.update_listing(listing_id, {"price": price, "original_price": int(price * 1.4)})
+        await queries.merge_context(artisan["id"], {"in_hand": in_hand_amount(price)})
+        applied = True
+    text_patch = {k: result[k] for k in ("title", "description") if result.get(k)}
+    if text_patch:
+        await queries.update_listing(listing_id, text_patch)
+        applied = True
+    if result.get("title_hi"):
+        await queries.merge_context(artisan["id"], {"title_hi": result["title_hi"]})
+        artisan["context"]["title_hi"] = result["title_hi"]
+        applied = True
+
+    # She wanted to change something but didn't say the new value → ask for it.
+    if result.get("clarify"):
+        if applied and result.get("reply_hi"):
+            await say(transport, msg.sender, result["reply_hi"], artisan_id=artisan["id"])
+        await say(transport, msg.sender, result["clarify"], artisan_id=artisan["id"])
+        return  # stay in awaiting_redo_choice for the missing value
+    if not applied:
         await say(transport, msg.sender,
                   result.get("reply_hi") or t("redo_choice"), artisan_id=artisan["id"])
         return
@@ -439,32 +459,90 @@ async def _awaiting_replacement_photo(artisan: dict, msg: InboundMessage, transp
 async def _process_replacement_photo(
     artisan: dict, sender: str, image: tuple[bytes, str], transport: Transport
 ) -> None:
+    from app.flows import preview
+
+    lang = artisan.get("language_code", "hi")
     listing_id = artisan["context"].get("listing_id")
     if not listing_id:  # safety: nothing to swap into
         await say(transport, sender, t("error"), artisan_id=artisan["id"])
         return
-    analyses = await vision.analyze_batch([image], artisan.get("language_code", "hi"))
+
+    # Gate 1: is it a real handmade craft at all? (same check as the first upload)
+    analyses = await vision.analyze_batch([image], lang)
     triage = triage_batch(analyses)
     log_event("pipeline", f"replacement photo → {triage['outcome']}", {"analyses": analyses})
-
-    if triage["outcome"] != "ok":  # same honest rejection reasons as the first upload
-        if triage["outcome"] == "rejected":
-            reason = (triage.get("reasons") or ["साफ़ नहीं दिख रहा"])[0]
-            await say(transport, sender, t("auth_reject", reason=reason), artisan_id=artisan["id"])
-        elif triage["outcome"] == "all_suspect":
-            await say(transport, sender, t("photo_suspect"), artisan_id=artisan["id"])
-        else:
-            no_craft = analyses and all((a.get("craft") in (None, "", "none")) for a in analyses)
-            await say(transport, sender, t("photo_not_craft") if no_craft else t("photo_fail"),
-                      artisan_id=artisan["id"])
+    reject = _photo_reject_message({**triage, "analyses": analyses})
+    if reject:
+        await say(transport, sender, reject, artisan_id=artisan["id"])
         return  # state stays awaiting_replacement_photo — she can try another photo
 
+    # Gate 2: is it the SAME artwork as the one already on the listing?
+    listing = await queries.get_listing(listing_id)
+    original_urls = listing.get("photo_urls") or []
+    if original_urls:
+        try:
+            original = await asyncio.to_thread(download_media, original_urls[0])
+            match = await vision.same_artwork(original, image[0], "image/jpeg", image[1], lang)
+        except Exception:  # noqa: BLE001 — a fetch/compare glitch must not block a genuine swap
+            logger.exception("same-artwork check failed; allowing the swap")
+            match = {"same_artwork": True}
+        if not match.get("same_artwork", True):
+            new_url = upload_media(image[0], ".jpg", image[1], folder="photos")
+            await queries.set_state(artisan["id"], "awaiting_swap_decision",
+                                    {"pending_swap_photo_url": new_url, "pending_swap_mime": image[1]})
+            await say(transport, sender, t("swap_different_painting"),
+                      buttons=[Button("swap_new_listing", t("swap_new_listing_label")),
+                               Button("swap_keep_original", t("swap_keep_original_label"))],
+                      artisan_id=artisan["id"])
+            return
+
+    # Same piece → swap the image in, keep title / price / size untouched
     enhanced = await asyncio.to_thread(photo.enhance, image[0])
     photo_url = upload_media(image[0], ".jpg", image[1], folder="photos")
     enhanced_url = upload_media(enhanced, ".jpg", "image/jpeg", folder="enhanced")
     await queries.update_listing(listing_id, {"photo_urls": [photo_url], "enhanced_photo_url": enhanced_url})
-    from app.flows import preview
     await preview.send_preview(artisan, sender, transport)
+
+
+async def _awaiting_swap_decision(artisan: dict, msg: InboundMessage, transport: Transport) -> None:
+    """She swapped in a different artwork — decide: new listing for it, or keep the first."""
+    from app.flows import preview
+
+    if msg.type == "image" and msg.media:  # she sent yet another photo — re-run the check on it
+        await queries.set_state(artisan["id"], "awaiting_replacement_photo")
+        artisan["onboarding_state"] = "awaiting_replacement_photo"
+        await _awaiting_replacement_photo(artisan, msg, transport)
+        return
+    reply = (await incoming_text(msg, artisan) or "").strip().lower()
+    if reply in {"1", "swap_new_listing"} or "नई" in reply or "new" in reply:
+        await _swap_to_new_listing(artisan, msg.sender, transport)
+    elif reply in {"2", "swap_keep_original"} or "पहली" in reply or "keep" in reply or "पुरानी" in reply:
+        await queries.merge_context(artisan["id"],
+                                    {"pending_swap_photo_url": None, "pending_swap_mime": None})
+        await preview.send_preview(artisan, msg.sender, transport)
+    else:
+        await say(transport, msg.sender, t("swap_different_painting"),
+                  buttons=[Button("swap_new_listing", t("swap_new_listing_label")),
+                           Button("swap_keep_original", t("swap_keep_original_label"))],
+                  artisan_id=artisan["id"])
+
+
+async def _swap_to_new_listing(artisan: dict, sender: str, transport: Transport) -> None:
+    ctx = artisan["context"]
+    url = ctx.get("pending_swap_photo_url")
+    if not url:
+        await say(transport, sender, t("error"), artisan_id=artisan["id"])
+        return
+    mime = ctx.get("pending_swap_mime") or "image/jpeg"
+    if ctx.get("listing_id"):  # the first draft was never published — drop it
+        await queries.update_listing(ctx["listing_id"], {"status": "rejected"})
+    await queries.set_state(artisan["id"], "awaiting_photos",
+                            {"listing_id": None, "pending_swap_photo_url": None, "pending_swap_mime": None})
+    await say(transport, sender, t("processing"), voice=False, artisan_id=artisan["id"])
+    data = await asyncio.to_thread(download_media, url)
+    result = await build_listing_package([(data, mime)], artisan.get("language_code", "hi"))
+    log_event("pipeline", f"new listing from swapped photo → {result['outcome']}", {})
+    await _finalize_listing_package(artisan, sender, [(data, mime)], result, transport)
 
 
 _HANDLERS = {
@@ -482,5 +560,6 @@ _HANDLERS = {
     "awaiting_preview_approval": _awaiting_preview_approval,
     "awaiting_redo_choice": _awaiting_redo_choice,
     "awaiting_replacement_photo": _awaiting_replacement_photo,
+    "awaiting_swap_decision": _awaiting_swap_decision,
 }
 

@@ -28,3 +28,12 @@ def upload_media(data: bytes, suffix: str, content_type: str, folder: str = "pho
         path, data, file_options={"content-type": content_type}
     )
     return db().storage.from_(MEDIA_BUCKET).get_public_url(path)
+
+
+def download_media(url: str) -> bytes:
+    """Fetch bytes back from a public media URL (sync — call via asyncio.to_thread)."""
+    import httpx
+
+    r = httpx.get(url, timeout=30)
+    r.raise_for_status()
+    return r.content

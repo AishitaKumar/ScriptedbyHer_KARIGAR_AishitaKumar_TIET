@@ -48,6 +48,21 @@ async def evaluate_back_challenge(image_bytes: bytes, mime: str = "image/jpeg",
     )
 
 
+async def same_artwork(current: bytes, new: bytes, current_mime: str = "image/jpeg",
+                       new_mime: str = "image/jpeg", language_code: str = "hi") -> dict:
+    """Change-photo guard: is the new photo the same physical piece as the listing's?"""
+    return await chat_json(
+        load_prompt("vision_same_artwork"),
+        [
+            {"type": "text", "text": f"Image A = current listing photo. Image B = the new photo. {_lang_note(language_code)}"},
+            image_content(current, current_mime),
+            image_content(new, new_mime),
+        ],
+        model=VISION_MODEL,
+        what="vision.same_artwork",
+    )
+
+
 async def cluster_batch(images: list[tuple[bytes, str]]) -> dict:
     """Tier-2 Mechanic A: ONE Vision call over all images → JSON groups of indices."""
     content: list[dict] = [

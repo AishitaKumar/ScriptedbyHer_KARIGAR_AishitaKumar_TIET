@@ -1,29 +1,31 @@
-<!-- prompt: listing_edit | v1 | used by: flows/onboarding (redo step — free-form voice edits) -->
+<!-- prompt: listing_edit | v2 | used by: flows/onboarding (redo step — free-form voice edits) -->
 
 An artisan reviewed her listing preview and said (by voice, in Hindi) what she
 wants changed. You receive her transcribed instruction and the current listing.
+She may ask for SEVERAL changes at once (e.g. "change the name and the price")
+— capture ALL of them in one response.
 
-Decide the action:
-- "set_price": she wants a different price → extract it in whole rupees.
-- "redo_photos": she wants different/new photos.
-- "edit_text": she wants the title or description changed AND she has given the
-  actual new wording/name → return the FULL updated "title" (English, <=70 chars)
-  and/or "description" (English) and "title_hi" (Hindi title), applying exactly
-  what she asked and keeping everything else unchanged. Never invent product
-  facts she didn't state.
-- "clarify": she wants to change the name/title/description but has NOT yet said
-  what the new wording should be (e.g. "change the name", "नाम बदल दो"). Do NOT
-  guess or fabricate a new title. Set reply_hi to a short question asking her for
-  the exact new name/wording she wants.
-- "publish": she says it's fine / go ahead / list it.
-- "unknown": genuinely unrelated to the listing.
+For each thing she mentions:
+- Price: if she gave a new price, put it in "price" (whole rupees). If she wants
+  to change the price but did NOT say the new amount, leave "price" null and note
+  it in "clarify".
+- Title / description / name: if she gave the actual new wording, return the FULL
+  updated "title" (English, <=70 chars) and/or "description" (English) and
+  "title_hi" (Hindi title), applying exactly what she asked and keeping everything
+  else unchanged. If she wants to change the name/title/description but did NOT say
+  the new wording, leave these null and note it in "clarify". Never invent product
+  facts or a name she didn't state.
+- Photos: if she wants a different/new photo, set "redo_photos" true.
+- Publish: if she says it's fine / go ahead / list it, set "publish" true.
 
-Also write "reply_hi": ONE short warm sentence in the artisan's language
-("language" field: "hi" → Hindi, "en" → English) acknowledging what you changed
-or understood (it is spoken aloud to her). For "unknown", ask in her language
-what she would like changed — price, photos, or the words.
+"clarify": if she asked to change something but did not give the new value(s), put
+ONE short question here (in her language) asking for exactly the missing value(s)
+— e.g. asking what the new name should be. Leave null if nothing needs asking.
+
+"reply_hi": ONE short warm sentence in her language ("language" field: "hi" →
+Hindi, "en" → English) acknowledging what you understood/changed (spoken aloud).
 
 Return ONLY a JSON object:
-{"action": "<set_price | redo_photos | edit_text | clarify | publish | unknown>",
- "price": <int or null>, "title": <string or null>, "description": <string or null>,
- "title_hi": <string or null>, "reply_hi": "<short Hindi sentence>"}
+{"price": <int or null>, "title": <string or null>, "description": <string or null>,
+ "title_hi": <string or null>, "redo_photos": <true|false>, "publish": <true|false>,
+ "clarify": <string or null>, "reply_hi": "<short sentence>"}
