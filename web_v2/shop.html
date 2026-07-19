@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meesho</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { pink: { DEFAULT:'#9c1d7f' } },
+    fontFamily: { sans: ['Manrope','system-ui','sans-serif'] },
+  } } }
+</script>
+<style>
+  html, body { overflow:hidden; height:100%; }
+  body { font-family:'Manrope',system-ui,sans-serif; }
+  .noscroll { -ms-overflow-style:none; scrollbar-width:none; }
+  .noscroll::-webkit-scrollbar { display:none; }
+  .toast { position:fixed; bottom:64px; left:50%; transform:translateX(-50%); background:#171717;
+    color:#fff; padding:9px 16px; border-radius:18px; font-size:12px; opacity:0; transition:opacity .3s;
+    pointer-events:none; z-index:50; max-width:92%; text-align:center; }
+  .toast.show { opacity:1; }
+</style>
+</head>
+<body class="bg-white text-neutral-900">
+<div id="app" class="h-screen"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PINK = '#9c1d7f';
+function esc(s){ const d=document.createElement('div'); d.textContent=s==null?'':s; return d.innerHTML; }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3600); }
+
+/* ---------- lucide inline icons ---------- */
+const PATHS = {
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  mic:'<rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/>',
+  camera:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/>',
+  heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+  cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57L23 6H6"/>',
+  'chevron-down':'<path d="m6 9 6 6 6-6"/>', 'chevron-right':'<path d="m9 18 6-6-6-6"/>',
+  rotate:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+  tag:'<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"/><circle cx="7.5" cy="7.5" r="1"/>',
+  rupee:'<circle cx="12" cy="12" r="10"/><path d="M8 8h8M8 12h8M13 17l-5-5h2a3 3 0 0 0 0-6"/>',
+  updown:'<path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/>',
+  sliders:'<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  shirt:'<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23Z"/>',
+  store:'<path d="m2 7 2.5-4h15L22 7M2 7v13a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V7M2 7h20M6 21v-8h5v8"/>',
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  package:'<path d="M16.5 9.4 7.5 4.21M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>',
+  star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  badge:'<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/>',
+  back:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  thumb:'<path d="M7 10v12M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>',
+  zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  truck:'<path d="M14 18V6a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1M14 9h5l3 3v5a1 1 0 0 1-1 1h-2"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="17.5" cy="18.5" r="1.5"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  checkcheck:'<path d="m18 6-8.5 8.5-2-2M7 12l2 2 8.5-8.5"/>',
+};
+function ic(name, cls, opt){
+  opt = opt || {};
+  const stroke = opt.fill ? `fill="${opt.fill}" stroke="none"` : `fill="none" stroke="currentColor" stroke-width="${opt.sw||2}" stroke-linecap="round" stroke-linejoin="round"`;
+  return `<svg class="${cls||'size-4'}" viewBox="0 0 24 24" ${stroke}>${PATHS[name]}</svg>`;
+}
+
+/* ---------- data ---------- */
+const A = '/assets2/products/';
+const PRODUCTS = [
+ {name:'Madhubani Handpainted Elephant Wall Art', image:A+'madhubani-elephant.png', price:149, mrp:499, offerPrice:129, rating:4.6, reviews:'2,341', topRated:true, craft:'madhubani'},
+ {name:'Glass Vase with Artificial Flowers Combo', image:A+'flower-vase.png', price:65, mrp:188, offerPrice:35, rating:4.4, reviews:'3,902', topRated:true},
+ {name:'Channapatna Wooden Toy Set (Pack of 3)', image:A+'channapatna-toys.png', price:199, mrp:599, offerPrice:179, rating:4.4, reviews:'1,205', craft:'channapatna'},
+ {name:'Multipurpose Kitchen Cleaner Spray 300ml', image:A+'kitchen-cleaner.png', price:37, mrp:106, offerPrice:17, rating:3.8, reviews:'60,594', imageReviews:'50+ image rev...'},
+ {name:'Pattachitra Peacock Handmade Cloth Painting', image:A+'pattachitra-peacock.png', price:249, mrp:899, offerPrice:219, rating:4.7, reviews:'876', topRated:true, craft:'pattachitra'},
+ {name:'Money Plant Vine for Wall Decor', image:A+'hanging-plant.png', price:59, mrp:162, offerPrice:42, rating:4.3, reviews:'3,792'},
+ {name:'Madhubani Fish & Floral Handmade Painting', image:A+'madhubani-fish.png', price:129, mrp:449, offerPrice:109, rating:4.3, reviews:'3,102', craft:'madhubani'},
+ {name:'Vintage Roman Numeral Wall Clock', image:A+'wall-clock.png', price:259, mrp:799, offerPrice:229, rating:4.1, reviews:'1,150'},
+ {name:'Warli Tribal Folk Art on Handmade Paper', image:A+'warli-art.png', price:99, mrp:349, offerPrice:89, rating:4.2, reviews:'540', craft:'warli'},
+ {name:'Handpainted Terracotta Decorative Pot', image:A+'terracotta-pot.png', price:149, mrp:399, offerPrice:129, rating:4.5, reviews:'2,006', topRated:true, craft:'terracotta'},
+];
+const CATEGORIES = [
+ {label:'All Categori...', icon:true},
+ {label:'Handmade', image:A+'madhubani-fish.png'},
+ {label:'Paintings', image:A+'pattachitra-peacock.png'},
+ {label:'Toys', image:A+'channapatna-toys.png'},
+ {label:'Home Decor', image:A+'terracotta-pot.png'},
+];
+const RATING_BARS = [
+ {label:'Very Good', count:'5,554', color:'#16a34a', w:'72%'},
+ {label:'Good', count:'2,409', color:'#22c55e', w:'34%'},
+ {label:'Ok-Ok', count:'1,436', color:'#eab308', w:'20%'},
+ {label:'Bad', count:'558', color:'#f97316', w:'9%'},
+ {label:'Very Bad', count:'1,231', color:'#ef4444', w:'16%'},
+];
+const REVIEWS = [
+ {tag:'Very Good', date:'10 Mar, 2024', text:"It's great. Feeling also good. Size and material also perfec...", name:'Trupti Waghela', helpful:151},
+ {tag:'Very Good', date:'10 Aug, 2024', text:'Nice fabric but the size was little lose but its okay nice one...', name:'Divya Senthil', helpful:38},
+];
+const RATING_LABELS = ['Very Bad','Bad','Ok-Ok','Good','Very Good'];
+const BUYER = { name:'Aishita Kumar', phone:'9999999999', address:'Meesho HQ Office, Bengaluru' };
+const disc = (mrp, price) => Math.round(((mrp - price) / mrp) * 100);
+
+let LIVE = [];
+let orders = JSON.parse(sessionStorage.getItem('karigar_orders')||'[]');
+function saveOrders(){ sessionStorage.setItem('karigar_orders', JSON.stringify(orders)); }
+function allProducts(){ return [...LIVE, ...PRODUCTS]; }
+
+const app = document.getElementById('app');
+let view = { name:'list' };
+
+/* ---------- shared chrome ---------- */
+const statusBar = `<div class="flex items-center justify-between px-4 pt-2 text-[11px] font-medium text-white/90" style="background:${PINK}"><span>8:06</span><span>VoLTE 21%</span></div>`;
+function bottomNav(active){
+  const items=[['Home','home'],['Categories','shirt'],['Mall','store'],['Video Finds','play'],['My Orders','package']];
+  return `<div class="grid grid-cols-5 border-t border-neutral-200 bg-white py-1.5 text-[9px]">${items.map(([label,icn])=>
+    `<button data-nav="${label}" class="flex flex-col items-center gap-0.5" style="color:${label===active?PINK:'#737373'}">${ic(icn,'size-4')}<span class="font-medium">${label}</span></button>`).join('')}</div>`;
+}
+function bindNav(){
+  app.querySelectorAll('[data-nav]').forEach(b=>{ b.onclick=()=>{
+    const k=b.dataset.nav;
+    if(k==='Home') renderList(); else if(k==='My Orders') renderMyOrders(); else toast('Static demo tab');
+  };});
+}
+
+/* ---------- product card ---------- */
+function productCard(p, idx){
+  return `<button data-open="${idx}" class="border-b border-r border-neutral-200 bg-white text-left">
+    <div class="relative aspect-square w-full overflow-hidden bg-neutral-100">
+      <img src="${p.image||''}" class="h-full w-full object-cover" loading="lazy">
+      <span class="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-white/90 shadow">${ic('heart','size-3.5 text-neutral-500')}</span>
+    </div>
+    <div class="space-y-1 p-2">
+      <p class="line-clamp-2 text-[11px] leading-snug text-neutral-700">${esc(p.name)}</p>
+      <div class="flex items-center gap-1.5"><span class="text-[15px] font-bold text-neutral-900">₹${p.price}</span>
+        <span class="text-[11px] text-neutral-400 line-through">₹${p.mrp}</span>
+        <span class="text-[11px] font-semibold text-neutral-500">${disc(p.mrp,p.price)}% off</span></div>
+      <div class="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5">${ic('badge','size-3 text-emerald-600',{sw:2.4})}<span class="text-[10px] font-medium text-emerald-700">Discount applied</span></div>
+      <p class="text-[11px] font-medium text-emerald-700">₹${p.offerPrice} with 1 Special Offer</p>
+      <div class="flex flex-wrap items-center gap-1 pt-0.5">
+        <span class="inline-flex items-center gap-0.5 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">${p.rating} ${ic('star','size-2.5',{fill:'#fff'})}</span>
+        <span class="text-[10px] text-neutral-400">(${p.reviews})</span>
+        ${p.topRated?`<span class="flex items-center gap-0.5 text-[10px] font-medium text-amber-600">${ic('star','size-2.5',{fill:'#f59e0b'})} Top rated</span>`:''}
+        ${p.imageReviews?`<span class="text-[10px] text-neutral-500">👐 ${p.imageReviews}</span>`:''}
+      </div>
+    </div>
+  </button>`;
+}
+
+/* ---------- LIST (home) ---------- */
+function renderList(){
+  view={name:'list'};
+  const items=allProducts();
+  app.innerHTML = `<div class="flex h-full flex-col bg-white">
+    ${statusBar}
+    <div class="px-3 pb-3 pt-1.5 text-white" style="background:${PINK}">
+      <div class="flex items-center gap-2">
+        <div class="flex size-8 items-center justify-center rounded-full bg-white text-lg font-bold lowercase" style="color:${PINK}">m</div>
+        <div class="flex flex-1 items-center gap-1 rounded-full bg-white/20 px-2 py-1 text-[11px]"><span class="rounded bg-white/30 px-1">₹</span><span>Discount upto ₹120</span></div>
+        ${ic('heart','size-5')} ${ic('cart','size-5')}
+      </div>
+      <div class="mt-2.5 flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-neutral-500">
+        ${ic('search','size-4')}<span class="flex-1 text-[13px]">Search by Keyword or Product ID</span>${ic('mic','size-4')}<div class="h-4 w-px bg-neutral-300"></div>${ic('camera','size-4')}
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto noscroll">
+      <div class="grid grid-cols-3 items-center bg-pink-50/60 px-2 py-2.5">
+        <div class="flex items-center justify-center gap-1.5">${ic('rotate','size-4 shrink-0',{})}<span class="text-[10px] font-semibold leading-tight text-neutral-800" style="color:inherit">7 Days<br>Easy Return</span></div>
+        <div class="flex items-center justify-center gap-1.5 border-l border-pink-200">${ic('rupee','size-4 shrink-0')}<span class="text-[10px] font-semibold leading-tight text-neutral-800">Cash on<br>Delivery</span></div>
+        <div class="flex items-center justify-center gap-1.5 border-l border-pink-200">${ic('tag','size-4 shrink-0')}<span class="text-[10px] font-semibold leading-tight text-neutral-800">Lowest<br>Price</span></div>
+      </div>
+      <div class="flex gap-3 overflow-x-auto px-3 py-3 noscroll">
+        ${CATEGORIES.map(c=>`<div class="flex w-14 shrink-0 flex-col items-center gap-1"><div class="flex size-14 items-center justify-center overflow-hidden rounded-full bg-pink-50">${c.icon?`<span style="color:${PINK}">${ic('grid','size-6')}</span>`:`<img src="${c.image}" class="h-full w-full object-cover">`}</div><span class="w-full truncate text-center text-[10px] text-neutral-600">${c.label}</span></div>`).join('')}
+      </div>
+      <div class="px-3 pb-3"><div class="relative h-24 w-full overflow-hidden rounded-xl shadow-sm">
+        <img src="${A}craft-mela-banner.png" class="absolute inset-0 h-full w-full object-cover">
+        <div class="absolute inset-0" style="background:linear-gradient(90deg,rgba(156,29,127,.95) 0%,rgba(156,29,127,.8) 45%,rgba(156,29,127,.15) 100%)"></div>
+        <div class="relative flex h-full items-center justify-between px-3 text-white">
+          <div class="max-w-[62%]"><p class="text-[13px] font-extrabold leading-tight">KARIGAR CRAFT MELA</p><p class="mt-0.5 text-[9px] leading-snug text-white/90">GI-verified handmade · upto 70% off</p></div>
+          <div class="rounded-md bg-white px-2 py-1 text-center" style="color:${PINK}"><p class="text-[8px] font-bold leading-none">AUGUST</p><p class="text-[13px] font-extrabold leading-tight">1–13</p></div>
+        </div>
+      </div></div>
+      <div class="sticky top-0 z-10 grid grid-cols-4 border-y border-neutral-200 bg-white text-[12px] text-neutral-700">
+        <button class="flex items-center justify-center gap-1 py-2.5 font-medium">${ic('updown','size-3.5')} Sort</button>
+        <button class="flex items-center justify-center gap-1 border-l border-neutral-200 py-2.5">Category ${ic('chevron-down','size-3.5')}</button>
+        <button class="flex items-center justify-center gap-1 border-l border-neutral-200 py-2.5">Gender ${ic('chevron-down','size-3.5')}</button>
+        <button class="flex items-center justify-center gap-1 border-l border-neutral-200 py-2.5">${ic('sliders','size-3.5')} Filters</button>
+      </div>
+      <div class="grid grid-cols-2 border-l border-t border-neutral-200">${items.map((p,i)=>productCard(p,i)).join('')}</div>
+    </div>
+    ${bottomNav('Home')}
+  </div>`;
+  app.querySelectorAll('[data-open]').forEach(b=> b.onclick=()=>renderDetail(items[+b.dataset.open]));
+  bindNav();
+}
+
+/* ---------- DETAIL ---------- */
+function renderDetail(p){
+  view={name:'detail',p};
+  const also = allProducts().filter(x=>x.name!==p.name).slice(0,6);
+  app.innerHTML = `<div class="flex h-full flex-col bg-white">
+    ${statusBar}
+    <div class="flex items-center gap-3 border-b border-neutral-200 bg-white px-3 py-2.5">
+      <button id="back">${ic('back','size-5 text-neutral-700')}</button><div class="flex-1"></div>
+      ${ic('search','size-5 text-neutral-600')} ${ic('heart','size-5 text-neutral-600')}
+      <div class="relative">${ic('cart','size-5 text-neutral-600')}<span class="absolute -right-1.5 -top-1.5 flex size-4 items-center justify-center rounded-full text-[9px] font-bold text-white" style="background:${PINK}">3</span></div>
+    </div>
+    <div class="flex-1 overflow-y-auto pb-2 noscroll">
+      <div class="relative aspect-square w-full bg-neutral-50"><img src="${p.image}" class="h-full w-full object-contain"></div>
+      <div class="flex items-start gap-3 px-3 py-3">
+        <p class="flex-1 text-[13px] leading-snug text-neutral-800">${esc(p.name)}</p>
+        <div class="flex shrink-0 gap-4 text-center text-[10px] text-neutral-500">
+          <div class="flex flex-col items-center gap-0.5">${ic('heart','size-5')}Wishlist</div>
+          <div class="flex flex-col items-center gap-0.5">${ic('share','size-5')}Share</div>
+        </div>
+      </div>
+      <div class="px-3">
+        <div class="flex items-center gap-2"><span class="text-[22px] font-bold text-neutral-900">₹${p.price}</span><span class="text-[13px] text-neutral-400 line-through">₹${p.mrp}</span><span class="text-[13px] font-semibold text-neutral-600">${disc(p.mrp,p.price)}% off</span>${ic('info','size-3.5 text-neutral-400')}</div>
+        <p class="mt-2 flex items-center gap-1 text-[12px] font-medium text-emerald-700">${ic('zap','size-3.5',{fill:'#f59e0b'})} UPI Offer applied for you!!</p>
+        <p class="mt-1 text-[12px] text-neutral-500">₹${p.mrp} with COD</p>
+        <div class="mt-2 inline-flex items-center gap-1 rounded px-1.5 py-0.5" style="background:#16a34a"><span class="flex items-center gap-0.5 text-[11px] font-semibold text-white">${p.rating} ${ic('star','size-2.5',{fill:'#fff'})}</span><span class="text-[11px] text-white/90">(${p.reviews})</span></div>
+        ${p.dimensions?`<p class="mt-2 text-[12px] text-neutral-600">📐 Size: ${esc(p.dimensions)}</p>`:''}
+        ${p.live?`<div class="mt-2 flex items-center gap-1 text-[12px] font-semibold" style="color:${PINK}">${ic('badge','size-4',{sw:2.2})} ${esc(p.artisanLine||'Listed live by a Karigar artisan')}</div>${p.desc?`<p class="mt-1.5 text-[12px] leading-relaxed text-neutral-500">${esc(p.desc)}</p>`:''}`:''}
+      </div>
+      ${reviewsSection(p)}
+      <div class="border-t-8 border-neutral-100">
+        <h3 class="px-3 py-3 text-[14px] font-bold text-neutral-900">People Also Viewed</h3>
+        <div class="grid grid-cols-2 border-l border-t border-neutral-200" id="also">${also.map((x,i)=>productCard(x,i)).join('')}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 border-t border-neutral-200 bg-white p-2">
+      <button class="flex items-center justify-center gap-1.5 rounded-md border py-2.5 text-[13px] font-semibold" style="border-color:${PINK};color:${PINK}">${ic('cart','size-4')} Add to Cart</button>
+      <button id="buy" class="flex items-center justify-center gap-1 rounded-md py-2.5 text-[13px] font-semibold text-white" style="background:${PINK}">${ic('chevron-right','size-4')} Buy Now</button>
+    </div>
+  </div>`;
+  document.getElementById('back').onclick = renderList;
+  document.getElementById('buy').onclick = ()=> renderReview(p);
+  app.querySelectorAll('#also [data-open]').forEach(b=> b.onclick=()=>renderDetail(also[+b.dataset.open]));
+}
+
+function reviewsSection(p){
+  return `<div class="border-t-8 border-neutral-100 px-3 py-4">
+    <h3 class="mb-3 text-[14px] font-bold text-neutral-900">Customer Ratings &amp; Reviews</h3>
+    <div class="flex gap-4">
+      <div class="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-md text-white" style="background:#16a34a"><span class="flex items-center gap-0.5 text-[20px] font-bold leading-none">${Number(p.rating).toFixed?Number(p.rating).toFixed(1):p.rating} ${ic('star','size-3.5',{fill:'#fff'})}</span></div>
+      <div class="flex-1 space-y-1">${RATING_BARS.map(b=>`<div class="flex items-center gap-2 text-[10px]"><span class="w-14 text-neutral-600">${b.label}</span><div class="h-1.5 flex-1 overflow-hidden rounded-full bg-neutral-200"><div class="h-full rounded-full" style="width:${b.w};background:${b.color}"></div></div><span class="w-10 text-right text-neutral-500">${b.count}</span></div>`).join('')}</div>
+    </div>
+    <p class="mt-2 text-[10px] text-neutral-400">11,188 ratings · 2,984 reviews</p>
+    <div class="mt-4 flex gap-4">
+      <div><p class="mb-1 text-[11px] font-semibold text-neutral-700">Real Photos (397)</p><div class="flex gap-1.5"><img src="${p.image}" class="size-12 rounded object-cover"><div class="relative size-12 overflow-hidden rounded"><img src="${p.image}" class="h-full w-full object-cover"><div class="absolute inset-0 flex items-center justify-center bg-black/50 text-[10px] font-bold text-white">+395</div></div></div></div>
+      <div><p class="mb-1 text-[11px] font-semibold text-neutral-700">Real Videos (1)</p><div class="relative size-12 overflow-hidden rounded"><img src="${p.image}" class="h-full w-full object-cover"><div class="absolute inset-0 flex items-center justify-center bg-black/30">${ic('play','size-4',{fill:'#fff'})}</div></div></div>
+    </div>
+    <div class="mt-4 space-y-4">${REVIEWS.map(r=>`<div class="border-t border-neutral-100 pt-3"><div class="flex items-center gap-1.5"><span class="inline-flex items-center gap-0.5 rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-semibold text-white">5 ${ic('star','size-2.5',{fill:'#fff'})}</span><span class="text-[11px] font-medium text-emerald-700">${r.tag}</span><span class="text-[10px] text-neutral-400">· Posted on ${r.date}</span></div><div class="mt-1.5 flex items-start justify-between gap-2"><p class="flex-1 text-[11px] leading-snug text-neutral-700">${r.text}<span class="font-medium" style="color:${PINK}">Read More</span></p><div class="relative size-11 shrink-0 overflow-hidden rounded"><img src="${p.image}" class="h-full w-full object-cover"><div class="absolute inset-0 flex items-center justify-center bg-black/40 text-[9px] font-bold text-white">+1</div></div></div><p class="mt-1 text-[10px] text-neutral-400">~${r.name}</p><div class="mt-1 flex items-center gap-1 text-[10px] text-neutral-500">${ic('thumb','size-3')} Helpful (${r.helpful})</div></div>`).join('')}</div>
+  </div>`;
+}
+
+/* ---------- REVIEW / CHECKOUT ---------- */
+function renderReview(p){
+  view={name:'review',p};
+  const d = p.mrp - p.price;
+  app.innerHTML = `<div class="flex h-full flex-col bg-neutral-50">
+    ${statusBar}
+    <div class="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-3">
+      <div class="flex items-center gap-3"><button id="back">${ic('back','size-5 text-neutral-700')}</button><span class="text-[13px] font-bold tracking-wide text-neutral-800">REVIEW YOUR ORDER</span></div>
+      <span class="rounded-full border px-2 py-0.5 text-[10px] font-semibold" style="border-color:${PINK};color:${PINK}">STEP 2/3</span>
+    </div>
+    <div class="flex-1 overflow-y-auto noscroll">
+      <div class="bg-white px-3 py-3">
+        <div class="mb-2 flex items-center gap-1.5">${ic('pin','size-4',{sw:2})}<span class="text-[13px] font-bold text-neutral-900" style="margin-left:-2px">Delivery Address</span></div>
+        <div class="flex items-start justify-between gap-2"><div class="flex-1"><p class="text-[12px] font-semibold text-neutral-800">${BUYER.name} · ${BUYER.phone}</p><p class="mt-0.5 text-[11px] leading-snug text-neutral-500">${BUYER.address}</p></div><button class="shrink-0 rounded-md border border-neutral-300 px-3 py-1 text-[11px] font-semibold text-neutral-700">Change</button></div>
+      </div>
+      <div class="mt-2 flex gap-3 bg-white px-3 py-3">
+        <div class="size-20 shrink-0 overflow-hidden rounded-md bg-neutral-100"><img src="${p.image}" class="h-full w-full object-cover"></div>
+        <div class="flex-1"><p class="line-clamp-2 text-[12px] leading-snug text-neutral-700">${esc(p.name)}</p>
+          <div class="mt-1 flex items-center gap-1.5"><span class="text-[15px] font-bold text-neutral-900">₹${p.price}</span><span class="text-[11px] text-neutral-400 line-through">₹${p.mrp}</span><span class="text-[11px] font-semibold text-neutral-500">${disc(p.mrp,p.price)}% Off</span></div>
+          <div class="mt-1.5 flex items-center gap-1.5"><span class="rounded border border-neutral-300 px-1.5 py-0.5 text-[10px] text-neutral-600">Size: Free Size</span><span class="flex items-center gap-0.5 rounded border border-neutral-300 px-1.5 py-0.5 text-[10px] text-neutral-600">Qty: 1 ${ic('chevron-down','size-3')}</span></div>
+          <p class="mt-1.5 flex items-center gap-1 text-[11px] text-neutral-500">${ic('truck','size-3.5')} Estimated Delivery by Fri, 01 Aug</p>
+        </div>
+      </div>
+      <div class="mt-2 bg-white px-3 py-3">
+        <p class="mb-2 text-[13px] font-bold text-neutral-900">Price Details (1 Item)</p>
+        <div class="flex items-center justify-between border-b border-dashed border-neutral-200 pb-2 text-[12px] text-neutral-600"><span>Product Price</span><span>+ ₹${p.mrp}</span></div>
+        <div class="flex items-center justify-between border-b border-dashed border-neutral-200 py-2 text-[12px]"><span class="font-medium text-emerald-700">Total Discounts</span><span class="text-emerald-700">- ₹${d}</span></div>
+        <div class="flex items-center justify-between pt-2 text-[13px] font-bold text-neutral-900"><span>Order Total</span><span>₹${p.price}</span></div>
+        <div class="mt-3 flex items-center justify-center gap-1.5 rounded-md bg-emerald-50 py-2 text-[11px] font-medium text-emerald-700">${ic('badge','size-4 text-emerald-600',{sw:2.2})} Yay! Your total discount is ₹${d}</div>
+      </div>
+    </div>
+    <div class="flex items-center justify-between border-t border-neutral-200 bg-white px-3 py-2.5">
+      <div><p class="text-[15px] font-bold text-neutral-900">₹${p.price}</p><p class="text-[10px] font-semibold" style="color:${PINK}">VIEW PRICE DETAILS</p></div>
+      <button id="continue" class="rounded-md px-10 py-2.5 text-[13px] font-semibold text-white" style="background:${PINK}">Confirm</button>
+    </div>
+  </div>`;
+  document.getElementById('back').onclick = ()=> renderDetail(p);
+  document.getElementById('continue').onclick = ()=> placeOrder(p);
+}
+
+async function placeOrder(p){
+  const btn = document.getElementById('continue');
+  if(btn){ btn.disabled=true; btn.textContent='Placing…'; }
+  let order = { order_id:null, live:!!p.live, name:p.name, image:p.image, price:p.price, mrp:p.mrp,
+                rating:p.rating, reviews:p.reviews, verified:p.verified, desc:p.desc, artisanLine:p.artisanLine,
+                status:'placed', reviewed:false };
+  if(p.live){
+    const fd=new FormData(); fd.append('listing_id', p.id);
+    const r = await fetch('/demo/buy', {method:'POST', body:fd});
+    if(r.ok){ order.order_id = (await r.json()).order_id; }
+    else { toast('Could not place order'); if(btn){btn.disabled=false; btn.textContent='Confirm';} return; }
+  } else if(p.craft){
+    // base catalogue item with a real craft → feed marketplace demand for Trend
+    const fd=new FormData(); fd.append('craft', p.craft);
+    try { await fetch('/demo/market-buy', {method:'POST', body:fd}); } catch(e){}
+  }
+  orders.unshift(order); saveOrders();
+  toast(p.live ? '📦 Order placed — the artisan just got a WhatsApp voice note' : '📦 Order placed');
+  renderOrder(order);
+}
+
+/* ---------- ORDER DETAILS (placed / delivered) ---------- */
+function orderIndex(order){ return orders.findIndex(o=>o===order || (o.order_id&&o.order_id===order.order_id)); }
+
+function renderOrder(order){
+  view={name:'order', order};
+  const delivered = order.status==='delivered' || order.status==='returned' || order.status==='exchanged';
+  app.innerHTML = `<div class="flex h-full flex-col bg-neutral-50">
+    ${statusBar}
+    <div class="flex items-center justify-between border-b border-neutral-200 bg-white px-3 py-3">
+      <div class="flex items-center gap-3"><button id="back">${ic('back','size-5 text-neutral-700')}</button><span class="text-[13px] font-bold tracking-wide text-neutral-800">ORDER DETAILS</span></div>
+      <button class="flex items-center gap-1 text-[12px] font-semibold" style="color:${PINK}">${ic('phone','size-4')} HELP</button>
+    </div>
+    <div class="flex-1 overflow-y-auto noscroll">
+      <div class="flex items-center gap-3 bg-white px-3 py-3">
+        <div class="size-14 shrink-0 overflow-hidden rounded-md bg-neutral-100"><img src="${order.image}" class="h-full w-full object-cover"></div>
+        <div class="flex-1"><p class="text-[11px] font-semibold text-neutral-500">Order #30214019955387</p><p class="line-clamp-1 text-[12px] text-neutral-800">${esc(order.name)}</p><p class="mt-0.5 text-[11px] text-neutral-400">Free Size · Cash ₹${order.price}</p></div>
+        ${ic('chevron-right','size-4 text-neutral-400')}
+      </div>
+      <div id="order-body"></div>
+      <div class="mt-2 bg-white px-3 py-4">
+        <div class="mb-2 flex items-center gap-1.5">${ic('pin','size-4',{sw:2})}<span class="text-[13px] font-bold text-neutral-900" style="margin-left:-2px">Delivery Address</span></div>
+        <p class="text-[12px] font-semibold text-neutral-800">${BUYER.name}</p><p class="mt-0.5 text-[11px] leading-snug text-neutral-500">${BUYER.address}</p><p class="mt-1 text-[11px] text-neutral-500">${BUYER.phone}</p>
+      </div>
+    </div>
+    ${bottomNav('My Orders')}
+  </div>`;
+  document.getElementById('back').onclick = ()=> renderMyOrders();
+  bindNav();
+  renderOrderBody(order, delivered);
+}
+
+function renderOrderBody(order, delivered){
+  const body = document.getElementById('order-body');
+  if(!delivered){
+    body.innerHTML = `
+      <div class="mt-2 bg-white px-3 py-4">
+        <div class="mb-4 flex items-center gap-2"><div class="flex size-9 shrink-0 items-center justify-center rounded-md text-white" style="background:${PINK}">${ic('package','size-5')}</div><div><p class="text-[13px] font-bold text-neutral-900">Order Placed</p><p class="text-[11px] text-neutral-500">Delivery by Fri, 01 Aug</p></div></div>
+        <div class="relative px-2">
+          <div class="flex items-center justify-between">
+            <div class="relative z-10 flex flex-col items-center"><div class="flex size-6 items-center justify-center rounded-full text-white" style="background:#16a34a">${ic('check','size-3.5')}</div></div>
+            <div class="relative z-10 flex size-7 items-center justify-center rounded-full border-2 border-white bg-neutral-200">${ic('truck','size-3.5 text-neutral-500')}</div>
+            <div class="relative z-10 flex flex-col items-center"><div class="flex size-6 items-center justify-center rounded-full border-2 border-neutral-300 bg-white"><span class="size-2 rounded-full bg-neutral-300"></span></div></div>
+          </div>
+          <div class="absolute left-6 right-6 top-3 -z-0 h-0.5 bg-neutral-200"><div class="h-full w-1/2 bg-emerald-500"></div></div>
+          <div class="mt-2 flex items-center justify-between">
+            <div class="flex flex-col"><span class="text-[11px] font-semibold text-neutral-800">Ordered</span><span class="text-[10px] text-neutral-400">1 Aug</span></div>
+            <div class="flex flex-col"><span class="text-[11px] font-semibold text-neutral-400">Shipped</span><span class="text-[10px] text-neutral-400">1 Aug</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-2 flex items-center justify-between bg-white px-3 py-3"><span class="text-[11px] text-neutral-500">Order placed, cancel available.</span><span class="text-[11px] font-bold" style="color:${PINK}">KNOW MORE</span></div>
+      <div class="mt-2 flex items-center gap-2 bg-pink-50/70 px-3 py-2.5 text-[11px] text-neutral-600">${ic('info','size-4 shrink-0',{})}<span>Press <b>“Order Received + Payment Received”</b> in the demo rail to mark this delivered — then rate, review, return or exchange.</span></div>`;
+    return;
+  }
+  // delivered: review + delivered + return/exchange
+  const reviewed = order.reviewed;
+  body.innerHTML = `
+    <div class="mt-2 bg-white px-3 py-4">
+      <p class="text-[14px] font-bold text-neutral-900">Give your review</p>
+      <p class="mt-0.5 text-[11px] text-neutral-500">How was the product?</p>
+      <div class="mt-3 flex items-start justify-between px-1" id="stars">
+        ${[1,2,3,4,5].map(n=>`<button data-star="${n}" class="flex flex-col items-center gap-1">${ic('star','size-8 text-neutral-300')}<span class="text-[10px] text-neutral-500">${RATING_LABELS[n-1]}</span></button>`).join('')}
+      </div>
+      <textarea id="comment" rows="3" placeholder="Write your comment here..." class="mt-4 w-full resize-none rounded-lg border border-neutral-300 px-3 py-2 text-[12px] text-neutral-800 outline-none focus:border-neutral-500"></textarea>
+      <button id="submit-review" disabled class="mt-3 w-full rounded-md py-2.5 text-[13px] font-semibold text-white disabled:opacity-50" style="background:${PINK}">Submit Review</button>
+      <p id="review-done" class="mt-2 hidden text-center text-[11px] font-medium text-emerald-600">Thanks! Your review has been submitted.</p>
+    </div>
+    <div class="mt-2 flex items-center gap-3 bg-white px-3 py-4">
+      <div class="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">${ic('checkcheck','size-5')}</div>
+      <div><p class="text-[13px] font-bold text-neutral-900">Delivered</p><p class="text-[11px] text-neutral-500">Fri, 01 Aug</p></div>
+    </div>
+    <div class="mt-2 bg-white px-3 py-4">
+      <div class="grid grid-cols-2 gap-3">
+        <button id="btn-return" class="rounded-md border py-2.5 text-[13px] font-semibold" style="border-color:${PINK};color:${PINK}">Return</button>
+        <button id="btn-exchange" class="rounded-md border py-2.5 text-[13px] font-semibold" style="border-color:${PINK};color:${PINK}">Exchange</button>
+      </div>
+      <div id="action-box"></div>
+    </div>`;
+  let rating = 0;
+  const starWrap = document.getElementById('stars');
+  starWrap.querySelectorAll('[data-star]').forEach(b=>{
+    b.onclick = ()=>{
+      rating = +b.dataset.star;
+      starWrap.querySelectorAll('[data-star]').forEach(x=>{
+        const on = +x.dataset.star <= rating;
+        const sv = x.querySelector('svg');
+        sv.setAttribute('fill', on?'#fbbf24':'none'); sv.setAttribute('stroke', on?'#fbbf24':'currentColor');
+        sv.classList.toggle('text-neutral-300', !on);
+      });
+      document.getElementById('submit-review').disabled = rating===0;
+    };
+  });
+  document.getElementById('submit-review').onclick = ()=> submitReview(order, rating, document.getElementById('comment').value);
+
+  let action = null;
+  const abox = document.getElementById('action-box');
+  function paint(){
+    document.getElementById('btn-return').style = action==='return'?`background:${PINK};color:#fff;border-color:${PINK}`:`border-color:${PINK};color:${PINK}`;
+    document.getElementById('btn-exchange').style = action==='exchange'?`background:${PINK};color:#fff;border-color:${PINK}`:`border-color:${PINK};color:${PINK}`;
+    document.getElementById('btn-return').className='rounded-md border py-2.5 text-[13px] font-semibold';
+    document.getElementById('btn-exchange').className='rounded-md border py-2.5 text-[13px] font-semibold';
+    if(!action){ abox.innerHTML=''; return; }
+    abox.innerHTML = `<div class="mt-3"><p class="mb-1.5 text-[12px] font-semibold text-neutral-800">Reason for ${action}</p>
+      <textarea id="reason" rows="3" placeholder="Tell us why you want to ${action} this product..." class="w-full resize-none rounded-lg border border-neutral-300 px-3 py-2 text-[12px] text-neutral-800 outline-none focus:border-neutral-500"></textarea>
+      <button id="submit-action" disabled class="mt-3 w-full rounded-md py-2.5 text-[13px] font-semibold text-white disabled:opacity-50" style="background:${PINK}">Submit ${action==='return'?'Return':'Exchange'} Request</button>
+      <p id="action-done" class="mt-2 hidden text-center text-[11px] font-medium text-emerald-600"></p></div>`;
+    const ta=document.getElementById('reason'), sb=document.getElementById('submit-action');
+    ta.oninput = ()=> sb.disabled = ta.value.trim()==='';
+    sb.onclick = ()=> submitAction(order, action, ta.value.trim());
+  }
+  document.getElementById('btn-return').onclick = ()=>{ action='return'; paint(); };
+  document.getElementById('btn-exchange').onclick = ()=>{ action='exchange'; paint(); };
+}
+
+async function submitReview(order, rating, comment){
+  const btn = document.getElementById('submit-review');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  if(order.live && order.order_id){
+    const fd = new FormData(); fd.append('order_id', order.order_id); fd.append('rating', rating); fd.append('comment', comment||'');
+    try { await fetch('/demo/submit-review', {method:'POST', body:fd}); } catch(e){}
+  }
+  order.reviewed = true; saveOrders();
+  document.getElementById('review-done').classList.remove('hidden');
+  btn.textContent = 'Submit Review';
+  toast(order.live ? '⭐ Review sent — the artisan has been notified' : '⭐ Review submitted');
+}
+
+async function submitAction(order, action, reason){
+  const btn = document.getElementById('submit-action');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  if(order.live && order.order_id){
+    const url = action==='return' ? '/demo/return-order' : '/demo/exchange-order';
+    const fd = new FormData(); fd.append('order_id', order.order_id); fd.append('reason', reason);
+    try { await fetch(url, {method:'POST', body:fd}); } catch(e){}
+  }
+  order.status = action==='return' ? 'returned' : 'exchanged'; saveOrders();
+  const done = document.getElementById('action-done');
+  done.textContent = `Your ${action} request has been submitted.`; done.classList.remove('hidden');
+  toast(order.live
+    ? (action==='return' ? '↩️ Return sent — de-escalation voice note to the artisan' : '🔁 Exchange sent — the artisan is notified')
+    : `Your ${action} request has been submitted.`);
+}
+
+/* ---------- MY ORDERS ---------- */
+function renderMyOrders(){
+  view={name:'myorders'};
+  const latest = orders[0] || null;
+  const delivered = latest && (latest.status==='delivered'||latest.status==='returned'||latest.status==='exchanged');
+  app.innerHTML = `<div class="flex h-full flex-col bg-white">
+    ${statusBar}
+    <div class="flex items-center gap-3 border-b border-neutral-200 bg-white px-3 py-3"><button id="back">${ic('back','size-5 text-neutral-700')}</button><span class="text-[13px] font-bold tracking-wide text-neutral-800">MY ORDERS</span></div>
+    <div class="flex items-center gap-3 border-b border-neutral-100 bg-white px-3 py-3">
+      <div class="flex flex-1 items-center gap-2 rounded-lg border border-neutral-300 px-3 py-2 text-neutral-400">${ic('search','size-4')}<span class="text-[13px]">Search orders</span></div>
+      <button class="flex items-center gap-1 text-[13px] font-semibold" style="color:${PINK}">${ic('sliders','size-4')} Filters</button>
+    </div>
+    <div class="flex-1 overflow-y-auto bg-neutral-50 noscroll" id="orders-list"></div>
+    ${bottomNav('My Orders')}
+  </div>`;
+  document.getElementById('back').onclick = renderList;
+  bindNav();
+  const el = document.getElementById('orders-list');
+  const rows = orders.map((o,i)=>{
+    const dv = o.status==='delivered'||o.status==='returned'||o.status==='exchanged';
+    const label = o.status==='returned'?'Returned':o.status==='exchanged'?'Exchange requested':dv?'Delivered':'Order Placed';
+    const sub = dv?'Delivered on Fri, 01 Aug':'Delivery by Fri, 01 Aug';
+    return `<button data-order="${i}" class="flex w-full items-center gap-3 border-b border-neutral-200 bg-white px-3 py-3 text-left">
+      <div class="size-20 shrink-0 overflow-hidden rounded-md bg-neutral-100"><img src="${o.image}" class="h-full w-full object-cover"></div>
+      <div class="flex-1"><p class="text-[13px] font-bold text-emerald-600">${label}</p><p class="mt-0.5 text-[12px] text-neutral-700">${sub}</p><p class="mt-0.5 text-[11px] text-neutral-500">Size: Free Size · Qty: 1</p></div>
+      ${ic('chevron-right','size-5 text-neutral-400')}</button>`;
+  }).join('');
+  el.innerHTML = (rows || `<p class="px-3 py-6 text-center text-[12px] text-neutral-500">You have no orders yet.</p>`) + `
+    <div class="mt-2 flex items-center gap-2 bg-gradient-to-r from-neutral-100 to-pink-50 px-4 py-6"><div class="flex-1"><p class="text-[18px] font-bold text-neutral-500">All Izzz Well</p><p class="text-[13px] font-semibold italic text-neutral-400">Just keep shopping</p></div><img src="${A}all-izz-well.png" class="h-28 w-auto object-contain"></div>`;
+  el.querySelectorAll('[data-order]').forEach(b=> b.onclick=()=> renderOrder(orders[+b.dataset.order]));
+}
+
+/* ---------- delivered signal from the demo rail (Trigger Payment) ---------- */
+window.addEventListener('message', async (e)=>{
+  if(!e.data || e.data.type !== 'deliver-next') return;
+  // Deliver only the OLDEST still-undelivered order (orders[] is newest-first).
+  let target = null;
+  for(let i = orders.length - 1; i >= 0; i--){
+    if(orders[i].status === 'placed'){ orders[i].status = 'delivered'; target = orders[i]; break; }
+  }
+  if(!target){ toast('No undelivered order — buy something first'); return; }
+  saveOrders();
+  if(view.name === 'order') renderOrder(view.order);
+  else if(view.name === 'myorders') renderMyOrders();
+  // Pay the artisan ONLY for a real listing — base products just show delivered.
+  if(target.live && target.order_id){
+    try {
+      const fd = new FormData(); fd.append('order_id', target.order_id);
+      await fetch('/demo/deliver-order', {method:'POST', body:fd});
+      toast('✅ Delivered — payment voice note sent to the artisan');
+    } catch(err){}
+  } else {
+    toast('✅ Order delivered');
+  }
+});
+
+/* ---------- live listings sync ---------- */
+let liveIds = null;
+async function loadLive(){
+  try{
+    const r = await fetch('/api/listings'); const data = await r.json();
+    const ids = data.listings.map(l=>l.id).join(',');
+    if(ids === liveIds) return;
+    liveIds = ids;
+    LIVE = data.listings.map(l=>({
+      live:true, id:l.id, name:l.title,
+      image:l.enhanced_photo_url||(l.photo_urls&&l.photo_urls[0])||'',
+      price:l.price, mrp:l.original_price||l.price, offerPrice:Math.max(l.price-30,1),
+      rating:'New', reviews:'Just listed', verified:true, desc:l.description, dimensions:l.dimensions,
+      artisanLine:l.artisans?`by ${l.artisans.name||'artisan'}, ${l.artisans.village||''}`:'',
+    }));
+    if(view.name==='list') renderList();
+  }catch(e){}
+}
+renderList();
+loadLive(); setInterval(loadLive, 5000);
+</script>
+</body>
+</html>

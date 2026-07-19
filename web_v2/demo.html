@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karigar · Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --pink:#9c1d7f; }
+  * { box-sizing:border-box; margin:0; font-family:'Manrope',system-ui,sans-serif; }
+  body { min-height:100vh; background:#f4f0eb; color:#171717; }
+  button { font-family:inherit; cursor:pointer; }
+  a { text-decoration:none; color:inherit; }
+
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px;
+           border-bottom:1px solid #e5e5e5; background:#faf8f5; padding:12px 24px; }
+  .h-left { display:flex; align-items:center; gap:12px; font-size:14px; }
+  .h-left a { display:flex; align-items:center; gap:6px; color:#737373; font-weight:600; }
+  .h-left a:hover { color:#262626; }
+  .h-left .sep { color:#d4d4d4; }
+  .h-left .title { font-weight:600; }
+  .h-left .title b { font-weight:700; }
+  .h-left .title span { color:#737373; font-weight:500; }
+  .h-right { display:flex; align-items:center; gap:8px; }
+  .btn-play { display:flex; align-items:center; gap:6px; border:none; border-radius:999px;
+              background:var(--pink); color:#fff; padding:7px 16px; font-size:14px; font-weight:700;
+              box-shadow:0 1px 2px rgba(0,0,0,.1); }
+  .btn-next { display:flex; align-items:center; gap:6px; border:1px solid #d4d4d4; border-radius:999px;
+              background:#fff; color:#404040; padding:7px 16px; font-size:14px; font-weight:600; }
+  .btn-reset { width:36px; height:36px; display:grid; place-items:center; border:1px solid #d4d4d4;
+               border-radius:50%; background:#fff; color:#525252; }
+
+  .body { max-width:1152px; margin:0 auto; padding:32px 24px; }
+  .row { display:flex; flex-direction:column; align-items:center; gap:40px; }
+  @media (min-width:1024px){ .row { flex-direction:row; align-items:flex-start; justify-content:center; } }
+
+  .frame-wrap { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .frame { position:relative; height:620px; width:300px; border-radius:40px; border:6px solid #171717;
+           background:#171717; box-shadow:0 25px 50px -12px rgba(0,0,0,.35); }
+  .frame .pill { position:absolute; left:50%; top:8px; transform:translateX(-50%); z-index:20;
+                 width:64px; height:6px; border-radius:999px; background:#404040; }
+  .frame .screen { height:100%; width:100%; overflow:hidden; border-radius:32px; background:#fff; }
+  .frame iframe { width:100%; height:100%; border:none; display:block; }
+  .caption { text-align:center; font-size:14px; color:#525252; }
+  .caption b { color:#262626; font-weight:700; }
+
+  .triggers { display:flex; flex-direction:column; gap:12px; width:100%; max-width:300px; }
+  .trig { border:1.5px solid var(--pink); border-radius:999px; padding:13px 24px; text-align:left;
+          font-size:15px; font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.06); background:#fff;
+          color:#737373; transition:all .12s; cursor:pointer; }
+  .trig:hover, .trig.active { background:#faf0f7; color:#262626; }
+  .trig .n { color:#a3a3a3; }
+  .reset-all { width:100%; margin-top:4px; background:#fff; border:1.5px solid #d99; color:#b04a4a;
+               border-radius:999px; padding:11px; font-size:13.5px; font-weight:700; cursor:pointer; }
+  .reset-all:hover { background:#b04a4a; color:#fff; border-color:#b04a4a; }
+
+  .coach { position:fixed; right:24px; bottom:24px; width:330px; background:#fff; border-radius:16px;
+           box-shadow:0 18px 50px rgba(23,23,23,.25); padding:18px; z-index:60; display:none; }
+  .coach.show { display:block; }
+  .coach .k { font-size:11.5px; font-weight:800; color:var(--pink); letter-spacing:.08em; }
+  .coach b { display:block; font-size:15.5px; margin:6px 0; }
+  .coach p { font-size:13.5px; color:#737373; line-height:1.55; font-weight:500; }
+  .coach-next { margin-top:12px; background:var(--pink); color:#fff; border:none; border-radius:999px;
+                padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer; float:right; }
+  .coach-next:hover { background:#83176f; }
+
+  .drawer { position:fixed; top:0; right:-380px; width:380px; height:100%; background:#1c1f26; color:#dfe3e8;
+            z-index:70; transition:right .25s; display:flex; flex-direction:column; }
+  .drawer.open { right:0; }
+  .drawer header { padding:14px 16px; font-weight:800; display:flex; justify-content:space-between;
+                   align-items:center; border-bottom:1px solid #2c3038; font-size:14px; background:none; }
+  .drawer header button { background:none; border:none; color:#8be0c9; font-weight:700; }
+  #agent-log { flex:1; overflow-y:auto; padding:10px 14px; font-family:Consolas,monospace; font-size:11.5px; }
+  .ev { border-left:3px solid #25d366; padding:5px 8px; margin:7px 0; background:#232730; border-radius:0 6px 6px 0; }
+  .ev .agent { font-weight:700; color:#8be0c9; }
+  .ev pre { white-space:pre-wrap; word-break:break-word; color:#9aa3ad; margin-top:3px; max-height:110px; overflow-y:auto; }
+</style>
+</head>
+<body>
+<header>
+  <div class="h-left">
+    <a href="/v2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m12 19-7-7 7-7M19 12H5"/></svg> Home</a>
+    <span class="sep">|</span>
+    <p class="title"><b>Karigar</b><span> · Live Demo</span></p>
+  </div>
+  <div class="h-right">
+    <button class="btn-play" onclick="playDemo()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="m6 4 14 8-14 8Z"/></svg> Play Demo</button>
+  </div>
+</header>
+
+<div class="body"><div class="row">
+  <div class="frame-wrap">
+    <div class="frame"><span class="pill"></span>
+      <div class="screen"><iframe id="chat" src="/v2/console" allow="microphone"></iframe></div>
+    </div>
+    <p class="caption"><b>The Artisan's Side</b> · WhatsApp</p>
+  </div>
+
+  <div class="frame-wrap">
+    <div class="frame"><span class="pill"></span>
+      <div class="screen"><iframe id="meesho" src="/v2/shop"></iframe></div>
+    </div>
+    <p class="caption"><b>The Buyer's Side</b> · Meesho, updates live</p>
+  </div>
+
+  <div class="triggers">
+    <button class="trig" data-i="0" onclick="fire(0,'trend')"><span class="n">1</span> · Trigger Trend Msg</button>
+    <button class="trig" data-i="1" onclick="fire(1,'deliver')"><span class="n">2</span> · Order + Payment Received</button>
+    <button class="trig" data-i="2" onclick="fire(2,'newsession')"><span class="n">3</span> · New Artisan Session</button>
+    <button class="trig" onclick="toggleDrawer()"><span class="n">4</span> · Agent activity</button>
+    <button class="reset-all" onclick="resetDemo()">Reset entire demo</button>
+  </div>
+</div></div>
+
+<div class="coach" id="coach">
+  <span class="k" id="coach-k"></span>
+  <b id="coach-title"></b>
+  <p id="coach-body"></p>
+  <button class="coach-next" onclick="nextStep()">Next →</button>
+</div>
+
+<div class="drawer" id="drawer">
+  <header>🤖 Live agent activity — raw model responses <button onclick="toggleDrawer()">close</button></header>
+  <div id="agent-log"></div>
+</div>
+
+<script>
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+// session id survives a refresh but resets when the window is closed
+const _fresh = !sessionStorage.getItem('karigar_session');
+let SESSION = sessionStorage.getItem('karigar_session') || Math.random().toString(36).slice(2, 10);
+sessionStorage.setItem('karigar_session', SESSION);
+function session(){ return SESSION; }
+// only a brand-new window wipes the backend, so a refresh keeps the demo going
+if(_fresh){ fetch('/demo/reset', {method:'POST'}).catch(()=>{}); }
+document.getElementById('chat').src = '/v2/console?s=' + SESSION;
+
+function setActive(i){
+  document.querySelectorAll('.trig').forEach(b=>b.classList.toggle('active', Number(b.dataset.i)===i));
+}
+async function trigger(name){
+  const fd = new FormData(); fd.append('session', session());
+  const r = await fetch('/demo/'+name, {method:'POST', body:fd});
+  if(!r.ok){ const e = await r.json(); alert(e.error||'failed'); }
+}
+function fire(i, action){
+  setActive(i);
+  if(action === 'trend'){
+    trigger('trigger-trend');
+  } else if(action === 'deliver'){
+    // the shop delivers its own oldest order and pays out only for real listings
+    const meesho = document.getElementById('meesho');
+    if(meesho && meesho.contentWindow) meesho.contentWindow.postMessage({type:'deliver-next'}, '*');
+  } else if(action === 'newsession'){
+    SESSION = Math.random().toString(36).slice(2, 10);
+    sessionStorage.setItem('karigar_session', SESSION);
+    document.getElementById('chat').src = '/v2/console?s=' + SESSION;
+  }
+}
+async function resetDemo(){
+  if(!confirm('Delete ALL listings, orders, artisans and chat history for a clean demo?')) return;
+  await fetch('/demo/reset', {method:'POST'});
+  sessionStorage.clear();
+  location.reload();
+}
+
+const STEPS = [
+ ['Start on WhatsApp', 'Tap "Naya Karigar" in the left phone. Choose a language — Hindi and English are live.'],
+ ['Open the store account', 'Answer name and village by voice or text. Then KYC: try the GSTIN fast-path with 22AAAAA0000A1Z5, or send "no" and use PAN + passbook photos.'],
+ ['Send the craft', 'Send 1-2 photos of ONE artwork. Vision checks quality, authenticity and provenance — watch the agent panel.'],
+ ['Size + price', 'Tell the size of the piece, then confirm the AI\'s price (or change it) — nothing publishes without a yes.'],
+ ['Approve the listing', 'Approve the preview and it goes live on Meesho instantly.'],
+ ['Watch Meesho update', 'The new listing appears at the top of the Meesho phone within seconds.'],
+ ['Buy it as a customer', 'On the Meesho phone: tap the listing → Buy Now → Confirm. An order voice note lands on WhatsApp instantly.'],
+ ['Deliver + pay', 'Press "2 · Order Received + Payment Received" — the oldest undelivered order shows Delivered and a payment voice note is sent.'],
+ ['Rate, review, return, exchange', 'On the delivered order: give stars + a review (the artisan is notified), or Return / Exchange with a reason (they are notified and de-escalated).'],
+ ['Coaching', 'Press "1 · Trigger Trend Msg" — the weekly coaching voice note comes from real sales and market data.'],
+];
+let step = -1;
+function playDemo(){ step = 0; showStep(); }
+function nextStep(){ step = (step + 1) % STEPS.length; showStep(); }
+function showStep(){
+  const c = document.getElementById('coach');
+  document.getElementById('coach-k').textContent = `STEP ${step+1} / ${STEPS.length}`;
+  document.getElementById('coach-title').textContent = STEPS[step][0];
+  document.getElementById('coach-body').textContent = STEPS[step][1];
+  c.classList.add('show');
+}
+
+let logSeen = 0;
+function toggleDrawer(){ document.getElementById('drawer').classList.toggle('open'); }
+async function poll(){
+  try{
+    const r = await fetch('/api/agent-log'); const d = await r.json();
+    const el = document.getElementById('agent-log');
+    d.events.slice(logSeen).forEach(ev=>{
+      const div = document.createElement('div'); div.className = 'ev';
+      div.innerHTML = '<span class="agent">'+esc(ev.agent)+'</span> '+esc(ev.summary)+
+        (ev.payload?'<pre>'+esc(JSON.stringify(ev.payload,null,1).slice(0,700))+'</pre>':'');
+      el.appendChild(div); el.scrollTop = el.scrollHeight;
+    });
+    logSeen = d.events.length;
+  }catch(e){}
+  setTimeout(poll, 1500);
+}
+poll();
+</script>
+</body>
+</html>

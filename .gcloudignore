@@ -1,0 +1,12 @@
+# Keep secrets and junk out of the Cloud Build upload.
+.env
+env.yaml
+.venv/
+.git/
+test_images/
+scripts/pipeline_out/
+scripts/voice_out/
+scripts/killshot_results.json
+__pycache__/
+*.pyc
+docs/

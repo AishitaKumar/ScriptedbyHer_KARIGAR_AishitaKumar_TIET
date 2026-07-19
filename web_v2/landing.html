@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#9F2089">
+<title>Karigar — Voice-first Meesho onboarding for artisans</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          background: '#FBF7F3', foreground: '#291A24', card: '#FFFFFF',
+          'card-foreground': '#291A24',
+          primary: { DEFAULT: '#9F2089', foreground: '#FDFDFD' },
+          secondary: { DEFAULT: '#F9ECF3', foreground: '#8B0066' },
+          muted: { DEFAULT: '#F4EFEB', foreground: '#6C5F67' },
+          accent: { DEFAULT: '#F2A618', foreground: '#3E2104' },
+          border: '#E7DEE4', ring: '#9F2089',
+        },
+        borderRadius: {
+          sm: '0.45rem', md: '0.6rem', lg: '0.75rem', xl: '1.05rem',
+          '2xl': '1.35rem', '3xl': '1.65rem', full: '9999px',
+        },
+        fontFamily: {
+          sans: ['"Plus Jakarta Sans"', '"Noto Sans Devanagari"', 'system-ui', 'sans-serif'],
+        },
+      },
+    },
+  }
+</script>
+<style>
+  body { font-family:'Plus Jakarta Sans','Noto Sans Devanagari',system-ui,sans-serif; }
+  .text-balance { text-wrap:balance; } .text-pretty { text-wrap:pretty; }
+</style>
+</head>
+<body class="bg-background text-foreground antialiased">
+  <div class="min-h-svh">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 md:px-6">
+        <a href="/v2" class="flex items-center gap-2">
+          <span class="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-extrabold text-primary-foreground">क</span>
+          <span class="text-lg font-extrabold tracking-tight">Karigar<span class="text-primary">.</span></span>
+        </a>
+        <nav class="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex">
+          <a href="https://drive.google.com/file/d/1SYRpFxcxgZYc0oREhemL0XW4vM3DBdTx/view?usp=sharing" target="_blank" rel="noopener" class="transition hover:text-foreground">How it works</a>
+          <a href="/v2/demo" class="transition hover:text-foreground">Demo</a>
+        </nav>
+        <a href="/v2/demo" class="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground transition hover:opacity-90">
+          <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>
+          Live Demo
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <!-- Hero -->
+      <section class="relative overflow-hidden">
+        <div class="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-12 md:px-6 lg:grid-cols-2 lg:pb-24 lg:pt-20">
+          <div class="flex flex-col items-start gap-6">
+            <span class="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-secondary px-3.5 py-1.5 text-xs font-semibold text-secondary-foreground">
+              <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+              Built for Meesho ScriptedByHer 2.0
+            </span>
+            <h1 class="text-4xl font-extrabold leading-[1.08] tracking-tight md:text-5xl lg:text-6xl text-balance">
+              The artisan's only interface is their <span class="text-primary">voice</span>.
+            </h1>
+            <p class="max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty">
+              Karigar is an agentic AI that turns a few WhatsApp photos and voice notes into a live
+              Meesho listing — then runs the artisan's entire storefront by voice. No app. No login.
+              No literacy required.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <a href="/v2/demo" class="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/25 transition hover:opacity-90">
+                <svg class="size-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>
+                Open the Live Demo
+                <svg class="size-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+              <a href="https://drive.google.com/file/d/1SYRpFxcxgZYc0oREhemL0XW4vM3DBdTx/view?usp=sharing" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3.5 text-sm font-semibold transition hover:bg-muted">
+                <svg class="size-4 text-primary" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>
+                How it works
+              </a>
+            </div>
+            <div class="flex flex-wrap gap-x-6 gap-y-2 pt-2 text-sm text-muted-foreground">
+              <span class="flex items-center gap-1.5">
+                <svg class="size-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+                Voice-first, in her language
+              </span>
+              <span class="flex items-center gap-1.5">
+                <svg class="size-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+                AI authenticity verification
+              </span>
+            </div>
+          </div>
+
+          <div class="relative">
+            <div class="relative aspect-[5/4] overflow-hidden rounded-3xl shadow-2xl">
+              <img src="/assets2/landing/artisan-hero.png" alt="An artisan hand-painting a Madhubani artwork at home" class="h-full w-full object-cover">
+            </div>
+            <div class="absolute -bottom-5 -left-3 flex items-center gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-xl md:-left-8">
+              <span class="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>
+              </span>
+              <div>
+                <p class="text-sm font-semibold">"इस महीने कितना कमाया?"</p>
+                <p class="text-xs text-muted-foreground">Asked by voice. The answer comes the same way.</p>
+              </div>
+            </div>
+            <div class="absolute -right-2 -top-5 rounded-2xl border border-border bg-card p-3 shadow-xl md:-right-6">
+              <span class="flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+                Verified Artisan
+              </span>
+              <p class="mt-1.5 text-sm font-bold">₹299 <span class="text-xs font-normal text-muted-foreground line-through">₹450</span></p>
+              <p class="text-[11px] text-muted-foreground">Live on Meesho in 60s</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem -->
+      <section class="border-y border-border bg-card">
+        <div class="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:py-20">
+          <div class="max-w-2xl">
+            <p class="text-sm font-bold uppercase tracking-widest text-primary">The Missing Seller</p>
+            <h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl text-balance">Meesho is fighting the fake. The real is still waiting.</h2>
+            <p class="mt-4 leading-relaxed text-muted-foreground text-pretty">
+              Meesho cleared 52 lakh+ factory-print listings under Project Suraksha — but the genuine artisans
+              those fakes copied never made it onto the shelf. The barrier is not skill; it's digital: many
+              can't read, type, or navigate an app on a phone they may not even own.
+            </p>
+          </div>
+          <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" id="stats"></div>
+        </div>
+      </section>
+
+      <!-- Agents -->
+      <section id="how-it-works" class="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:py-24">
+        <div class="max-w-2xl">
+          <p class="text-sm font-bold uppercase tracking-widest text-primary">How It Works</p>
+          <h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl text-balance">6 agents. The artisan's entire business — automated.</h2>
+          <p class="mt-4 leading-relaxed text-muted-foreground text-pretty">
+            A GPT-4o orchestrator routes every photo, voice note, and reply to the right specialist agent.
+            The artisan's only job is to keep making. Every other job belongs to the agent.
+          </p>
+        </div>
+        <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" id="agents"></div>
+      </section>
+
+      <!-- Journey -->
+      <section class="border-y border-border bg-card">
+        <div class="mx-auto max-w-7xl px-4 py-16 md:px-6 lg:py-24">
+          <div class="max-w-2xl">
+            <p class="text-sm font-bold uppercase tracking-widest text-primary">Skilled. Invisible. Forgotten.</p>
+            <h2 class="mt-3 text-3xl font-extrabold tracking-tight md:text-4xl text-balance">Three lives. Three crafts. One shared wall — the digital barrier.</h2>
+          </div>
+          <div class="mt-10 grid gap-5 md:grid-cols-3" id="personas"></div>
+
+          <div class="mt-14 flex flex-col items-center gap-5 rounded-3xl bg-primary px-6 py-12 text-center text-primary-foreground md:py-16">
+            <h2 class="max-w-2xl text-3xl font-extrabold tracking-tight md:text-4xl text-balance">Watch an artisan go from a voice note to a live Meesho listing.</h2>
+            <p class="max-w-xl text-primary-foreground/85 text-pretty">The WhatsApp chat and the Meesho storefront — side by side, updating in real time.</p>
+            <a href="/v2/demo" class="group inline-flex items-center gap-2 rounded-full bg-card px-8 py-4 text-sm font-bold text-primary shadow-xl transition hover:opacity-90">
+              <svg class="size-4" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l14 8-14 8z"/></svg>
+              Open the Live Demo
+              <svg class="size-4 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 py-10 text-center text-sm text-muted-foreground md:px-6">
+      <p class="font-semibold text-foreground">Karigar · ScriptedByHer 2.0</p>
+      <p>No app. No login. No English. No literacy required. Just a voice.</p>
+    </footer>
+  </div>
+
+<script>
+  const ic = {
+    eye:'<circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/>',
+    camera:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/>',
+    pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+    tag:'<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4Z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    send:'<path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/>',
+    shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+    chart:'<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>',
+  };
+  const svg = p => `<svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+
+  const STATS = [
+    ['1.13 Cr','Artisans with zero digital presence','IHD + CCI, May 2026'],
+    ['₹270','Daily wage — below minimum wage in every state','IHD + CCI, May 2026'],
+    ['64%','Are women from rural Bharat','Ministry of Textiles'],
+    ['52 L+','Fake craft listings Meesho removed — real artisans still missing','Project Suraksha'],
+  ];
+  document.getElementById('stats').innerHTML = STATS.map(([v,l,s])=>`
+    <div class="rounded-2xl border border-border bg-background p-6">
+      <p class="text-4xl font-extrabold tracking-tight text-primary">${v}</p>
+      <p class="mt-2 text-sm font-medium leading-snug">${l}</p>
+      <p class="mt-2 text-xs text-muted-foreground">${s}</p>
+    </div>`).join('');
+
+  const AGENTS = [
+    ['eye','Vision','Capture','Identifies craft tradition, style, motifs — and scores authenticity to catch factory prints.','GPT-4o Vision'],
+    ['camera','Photo','Enhance','Removes backgrounds, corrects lighting, sharpens craft detail. Quality gate before listing.','rembg + Pillow'],
+    ['pen','Story','Describe',"Writes a Meesho listing in the artisan's voice, using craft knowledge.",'GPT-4o'],
+    ['tag','Pricing','Price','Beats fakes on authenticity, matches on price — and shows the artisan their in-hand amount.','GPT-4o'],
+    ['send','Distribution','Run','Publishes the listing, then runs the whole order lifecycle — orders, payouts, returns, exchanges and reviews — voice-notifying the artisan on each.','GPT-4o + mock Seller API'],
+    ['chart','Trend','Learn','Turns weekly sales into coaching — bestsellers, Diwali prep — as a Hindi voice note.','GPT-4o + TTS'],
+  ];
+  document.getElementById('agents').innerHTML = AGENTS.map(([i,name,role,desc,tech],idx)=>`
+    <div class="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-lg">
+      <div class="flex items-center justify-between">
+        <span class="flex size-10 items-center justify-center rounded-xl bg-secondary text-primary">${svg(ic[i])}</span>
+        <span class="text-xs font-bold text-muted-foreground">0${idx+1}</span>
+      </div>
+      <div>
+        <h3 class="font-bold">${name} <span class="font-normal text-muted-foreground">· ${role}</span></h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-muted-foreground">${desc}</p>
+      </div>
+      <span class="mt-auto w-fit rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">${tech}</span>
+    </div>`).join('') + `
+    <div class="flex flex-col justify-center gap-2 rounded-2xl bg-primary p-5 text-primary-foreground">
+      <p class="text-lg font-extrabold leading-snug text-balance">"Meesho removed the fakes. Karigar brings the real thing."</p>
+      <p class="text-sm text-primary-foreground/80">karigar · artisan commerce agent for Meesho</p>
+    </div>`;
+
+  const PERSONAS = [
+    ['Ramkali Devi, 58','Madhubani painting · Bihar','/assets2/landing/madhubani-peacock.png','"Tourists come sometimes. They offer ₹50. I take it. I don\'t know how to ask for more."','40 years of mastery — now earning ₹4,836/month, paid directly.'],
+    ['Fatima Bi, 34','Kutch hand embroidery · Gujarat','/assets2/landing/kutch-embroidery.png','"The cooperative sells my work for ₹800. They give me ₹200."','With no middleman, she finally knows the worth of her work.'],
+    ['Gopal Das, 62','Channapatna lacquerware · Karnataka','/assets2/landing/channapatna-toys.png','"My sons said there\'s no money in this. Maybe they\'re right."','His 300-year GI tag is working for him for the first time.'],
+  ];
+  document.getElementById('personas').innerHTML = PERSONAS.map(([name,craft,img,quote,after])=>`
+    <article class="flex flex-col overflow-hidden rounded-2xl border border-border bg-background">
+      <div class="relative aspect-[4/3]"><img src="${img}" alt="${craft}" class="h-full w-full object-cover"></div>
+      <div class="flex flex-1 flex-col gap-3 p-5">
+        <div><h3 class="font-bold">${name}</h3><p class="text-sm text-muted-foreground">${craft}</p></div>
+        <blockquote class="border-l-2 border-primary pl-3 text-sm italic leading-relaxed text-muted-foreground">${quote}</blockquote>
+        <p class="mt-auto text-sm font-semibold text-primary">${after}</p>
+      </div>
+    </article>`).join('');
+</script>
+</body>
+</html>

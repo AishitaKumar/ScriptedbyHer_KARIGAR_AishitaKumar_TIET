@@ -1,0 +1,10 @@
+.env
+env.yaml
+__pycache__/
+*.pyc
+.venv/
+venv/
+scripts/killshot_results.json
+scripts/pipeline_out/
+scripts/voice_out/
+.pytest_cache/

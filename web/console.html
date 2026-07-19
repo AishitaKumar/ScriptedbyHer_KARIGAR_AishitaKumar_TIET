@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karigar · WhatsApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --teal:#075E54; --teal-2:#075E54; --avatar:#128C7E; --bg:#EFEAE2; --out:#D9FDD3; --ink:#111B21; }
+  * { box-sizing:border-box; margin:0; font-family:'Manrope','Segoe UI',system-ui,sans-serif; }
+  html, body { overflow-x:hidden; scrollbar-width:none; }
+  body::-webkit-scrollbar { display:none; }
+  body { height:100vh; height:100dvh; display:flex; flex-direction:column;
+         margin:0 auto; background:var(--bg); }
+
+  .wa-header { background:var(--teal); color:#fff; padding:8px 10px; display:flex;
+               align-items:center; gap:8px; flex:none; }
+  .wa-header .back { opacity:.95; display:flex; flex:none; }
+  .avatar { width:33px; height:33px; flex:none; border-radius:50%; background:var(--avatar); color:#fff;
+            display:grid; place-items:center; font-size:16px; font-weight:800; }
+  .who { flex:1; min-width:0; line-height:1.15; margin-right:4px; }
+  .who b { font-size:15px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .who small { font-size:10.5px; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+  .hicons { display:flex; gap:13px; align-items:center; opacity:.95; flex:none; }
+  .hicons svg { width:18px; height:18px; }
+
+  .messages { flex:1; overflow-y:auto; overflow-x:hidden; padding:10px 10px 14px;
+    scrollbar-width:none;
+    background-color:var(--bg);
+    background-image:radial-gradient(#d8cfc4 0.85px, transparent 0.85px);
+    background-size:22px 22px; }
+  .messages::-webkit-scrollbar { display:none; }
+  .e2e { background:#FEF7CE; color:#54656F; font-size:11.5px; font-weight:600; text-align:center;
+         border-radius:8px; padding:7px 12px; margin:4px auto 12px; max-width:320px; line-height:1.45;
+         box-shadow:0 1px 1px rgba(0,0,0,.06); }
+  .e2e svg { vertical-align:-1.5px; margin-right:2px; }
+  .msg { max-width:82%; margin:5px 0; padding:7px 10px 8px; border-radius:9px; font-size:14px;
+         line-height:1.42; box-shadow:0 1px 1px rgba(0,0,0,.09); white-space:pre-wrap;
+         color:var(--ink); position:relative; }
+  .msg.in { background:#fff; margin-right:auto; border-top-left-radius:2px; }
+  .msg.out { background:var(--out); margin-left:auto; border-top-right-radius:2px; }
+  .msg img { max-width:100%; border-radius:7px; margin-top:5px; display:block; }
+  .msg audio { width:210px; max-width:100%; margin-top:6px; height:36px; }
+  .btn-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+  .btn-row button { border:1.5px solid var(--teal-2); color:var(--teal); background:#fff;
+                    border-radius:16px; padding:6px 13px; cursor:pointer; font-size:13px;
+                    font-weight:700; font-family:inherit; }
+  .btn-row button:hover { background:var(--teal); color:#fff; }
+
+  .start-card { text-align:center; margin:60px auto 0; max-width:280px; background:#fff;
+                border-radius:14px; padding:24px 20px; box-shadow:0 2px 10px rgba(0,0,0,.1); }
+  .start-card .big { color:var(--avatar); display:flex; justify-content:center; }
+  .start-card p { font-size:13px; color:#5a636a; margin:12px 0 16px; line-height:1.55; font-weight:600; }
+  .start-card p .en { color:#98a1a8; font-weight:600; }
+  .start-card button { background:var(--avatar); border:none; color:#fff; font-weight:800; font-size:15px;
+                       padding:12px 24px; border-radius:24px; cursor:pointer; font-family:inherit; }
+  .start-card button:hover { background:var(--teal); }
+
+  .composer { display:flex; gap:8px; padding:7px 8px 10px; align-items:flex-end; }
+  .input-pill { flex:1; min-width:0; background:#fff; border-radius:24px; display:flex; align-items:center;
+                gap:8px; padding:6px 12px; min-height:46px; }
+  .input-pill svg { color:#8696A0; flex:none; cursor:pointer; }
+  .input-pill input { flex:1; border:none; outline:none; font-size:14.5px; font-family:inherit;
+                      color:var(--ink); min-width:0; background:transparent; }
+  .fab { width:46px; height:46px; flex:none; border-radius:50%; border:none; background:var(--teal-2);
+         color:#fff; cursor:pointer; display:grid; place-items:center; }
+  .fab.rec { background:#EA4335; }
+</style>
+</head>
+<body>
+  <div class="wa-header">
+    <span class="back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 19 8 12l7-7"/></svg></span>
+    <div class="avatar">क</div>
+    <div class="who"><b>Karigar</b><small>AI seller assistant · online</small></div>
+    <div class="hicons">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10 20 7v10l-5-3v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3Z"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="e2e"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M6 10V8a6 6 0 1 1 12 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h8V8a4 4 0 0 0-8 0v2Z"/></svg>Messages are end-to-end encrypted. No one outside of this chat can read them.</div>
+    <div class="start-card" id="start-card">
+      <div class="big">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M4 9.5 5.2 4h13.6L20 9.5M4 9.5a2.3 2.3 0 0 0 4.6 0 2.3 2.3 0 0 0 4.7 0 2.3 2.3 0 0 0 4.7 0 2.3 2.3 0 0 0 2 2.3V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8.2a2.3 2.3 0 0 0 2-2.3Z"/>
+          <path d="M9.5 21v-6h5v6"/>
+        </svg>
+      </div>
+      <p>चैट शुरू करने के लिए 'Naya Karigar' दबाएं<br><span class="en">(tap the Naya Karigar button to start the chat)</span></p>
+      <button onclick="startChat()">Naya Karigar</button>
+    </div>
+  </div>
+
+  <div class="composer">
+    <div class="input-pill">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg>
+      <input type="text" id="text-input" placeholder="Message" autocomplete="off">
+      <svg id="attach-btn" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="transform:rotate(45deg)"><path d="M21 12.5 12.7 20.8a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></svg>
+      <svg id="img-btn" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+      <input type="file" id="img-input" accept="image/*" multiple hidden>
+    </div>
+    <button class="fab" id="fab" title="Record voice note / send">
+      <svg id="fab-mic" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0h-2a4.5 4.5 0 0 1-9 0h-2ZM11 18.5h2V22h-2z"/></svg>
+      <svg id="fab-send" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 20.5 22 12 3 3.5V10l13 2-13 2v6.5Z"/></svg>
+    </button>
+  </div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+let SESSION = qs.get('s') || localStorage.getItem('karigar_session') ||
+  Math.random().toString(36).slice(2, 10);
+localStorage.setItem('karigar_session', SESSION);
+
+const messagesEl = document.getElementById('messages');
+const textInput = document.getElementById('text-input');
+let since = 0;
+
+function removeStart(){ const c=document.getElementById('start-card'); if(c) c.remove(); }
+function startChat(){ removeStart(); addBubble('Naya Karigar','out'); send('text','Naya Karigar'); }
+
+function addBubble(html, dir){
+  removeStart();
+  const d=document.createElement('div'); d.className='msg '+dir; d.innerHTML=html;
+  messagesEl.appendChild(d); messagesEl.scrollTop=messagesEl.scrollHeight; return d;
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+async function send(type, text, file){
+  const fd=new FormData();
+  fd.append('session',SESSION); fd.append('type',type);
+  if(text) fd.append('text',text);
+  if(file) fd.append('file',file);
+  await fetch('/api/console/send',{method:'POST',body:fd});
+}
+
+function updateFab(){
+  const typing = textInput.value.trim().length > 0;
+  document.getElementById('fab-mic').style.display = typing?'none':'block';
+  document.getElementById('fab-send').style.display = typing?'block':'none';
+}
+textInput.addEventListener('input', updateFab);
+textInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendText(); });
+function sendText(){
+  const v=textInput.value.trim(); if(!v) return;
+  textInput.value=''; updateFab();
+  addBubble(esc(v),'out'); send('text',v);
+}
+
+document.getElementById('img-btn').onclick = ()=>document.getElementById('img-input').click();
+document.getElementById('attach-btn').onclick = ()=>document.getElementById('img-input').click();
+document.getElementById('img-input').onchange = async e=>{
+  for(const f of e.target.files){
+    addBubble('<img src="'+URL.createObjectURL(f)+'">','out');
+    await send('image',null,f);
+  }
+  e.target.value='';
+};
+
+let recorder=null, chunks=[];
+document.getElementById('fab').onclick = async function(){
+  if(textInput.value.trim()){ sendText(); return; }
+  if(recorder && recorder.state==='recording'){ recorder.stop(); return; }
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  chunks=[]; recorder=new MediaRecorder(stream,{mimeType:'audio/webm'});
+  recorder.ondataavailable=e=>chunks.push(e.data);
+  recorder.onstop=async ()=>{
+    stream.getTracks().forEach(t=>t.stop());
+    this.classList.remove('rec');
+    const blob=new Blob(chunks,{type:'audio/webm'});
+    const f=new File([blob],'note.webm',{type:'audio/webm'});
+    addBubble('🎤 <audio controls src="'+URL.createObjectURL(blob)+'"></audio>','out');
+    await send('audio',null,f);
+  };
+  recorder.start(); this.classList.add('rec');
+};
+
+function renderInbound(m){
+  let html=esc(m.text);
+  if(m.image_url) html+='<img src="'+m.image_url+'">';
+  if(m.audio_url) html+='<audio controls src="'+m.audio_url+'"></audio>';
+  const bubble=addBubble(html,'in');
+  if(m.buttons && m.buttons.length){
+    const row=document.createElement('div'); row.className='btn-row';
+    m.buttons.forEach(b=>{
+      const btn=document.createElement('button'); btn.textContent=b.label;
+      btn.onclick=()=>{ addBubble(esc(b.label),'out'); send('button',b.id); };
+      row.appendChild(btn);
+    });
+    bubble.appendChild(row);
+  }
+}
+
+async function poll(){
+  try{
+    const r=await fetch(`/api/console/poll?session=${SESSION}&since=${since}`);
+    const data=await r.json();
+    if(data.messages.length) removeStart();
+    data.messages.forEach(renderInbound);
+    since=data.next;
+  }catch(e){}
+  setTimeout(poll,1500);
+}
+poll();
+</script>
+</body>
+</html>

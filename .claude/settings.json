@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Start-Sleep -Seconds 12; \\(Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health\\).Content)",
+      "Bash(python -)",
+      "PowerShell(Start-Sleep -Seconds 10; \\(Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8000/health\\).Content)",
+      "PowerShell($ErrorActionPreference='Stop'; $dst=\"$env:LOCALAPPDATA\\\\google-cloud-sdk.zip\"; $url=\"https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-cli-windows-x86_64.zip\"; \"Downloading Google Cloud CLI \\(~160MB\\)...\"; $sw=[Diagnostics.Stopwatch]::StartNew\\(\\); \\(New-Object Net.WebClient\\).DownloadFile\\($url,$dst\\); \"Downloaded in $\\([int]$sw.Elapsed.TotalSeconds\\)s, size $\\([int]\\(\\(Get-Item $dst\\).Length/1MB\\)\\)MB\")"
+    ]
+  }
+}

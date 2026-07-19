@@ -1,0 +1,10 @@
+.venv
+.git
+test_images
+scripts/pipeline_out
+scripts/voice_out
+scripts/killshot_results.json
+__pycache__
+*.pyc
+.env
+docs
