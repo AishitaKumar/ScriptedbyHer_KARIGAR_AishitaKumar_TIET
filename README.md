@@ -211,7 +211,7 @@ app/
   mocks/         meesho_api, gst_lookup, gst_enrolment, gi_registry (swap-ready)
   db/            schema.sql, migrations 002–007, queries
   jobs/          async queue (Cloud-Tasks-swappable)
-web/  web_v2/    Demo Console, Meesho-styled shop, landing (v2 is the live design)
+web_v2/          Demo Console, Meesho-styled shop, landing (static frontend)
 tests/           60 unit tests
 scripts/         01 kill-shot · 05 e2e · 08 post-purchase · 13 edge cases · …
 deploy/          Cloud Run instructions

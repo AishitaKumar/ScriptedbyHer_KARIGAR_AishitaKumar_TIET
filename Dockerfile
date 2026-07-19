@@ -16,7 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN python -c "from rembg import new_session; new_session('u2net')" || true
 
 COPY app ./app
-COPY web ./web
 COPY web_v2 ./web_v2
 
 ENV PORT=8080

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI, File, Form, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -38,9 +38,7 @@ if os.environ.get("TWILIO_ACCOUNT_SID"):
 
     app.include_router(twilio_wa.router)
 
-WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 WEB_V2_DIR = Path(__file__).resolve().parent.parent / "web_v2"
-app.mount("/assets", StaticFiles(directory=WEB_DIR / "assets"), name="assets")
 app.mount("/assets2", StaticFiles(directory=WEB_V2_DIR / "assets2"), name="assets2")
 
 
@@ -287,24 +285,25 @@ async def health():
     return {"ok": True}
 
 
+# Base URLs redirect to the live (v2) frontend.
 @app.get("/")
 async def landing_page():
-    return FileResponse(WEB_DIR / "landing.html")
+    return RedirectResponse(url="/v2")
 
 
 @app.get("/demo")
 async def demo_page():
-    return FileResponse(WEB_DIR / "demo.html")
+    return RedirectResponse(url="/v2/demo")
 
 
 @app.get("/console")
 async def console_page():
-    return FileResponse(WEB_DIR / "console.html")
+    return RedirectResponse(url="/v2/console")
 
 
 @app.get("/shop")
 async def shop_page():
-    return FileResponse(WEB_DIR / "shop.html")
+    return RedirectResponse(url="/v2/shop")
 
 
 @app.get("/v2")
