@@ -19,11 +19,11 @@ async def send_preview(artisan: dict, sender: str, transport: Transport) -> None
     from app.flows.messages import current_lang
 
     listing = (await queries.listings_for_artisan(artisan["id"], ["pending_approval"]))[0]
-    badge = t("badge_verified") if listing["gi_status"] == "verified" else ""
+    badge = ""
     if artisan.get("seller_identity_id"):
         identity = await queries.get_seller_identity(artisan["seller_identity_id"])
         store = identity.get("business_name") or _store_suggestion(artisan, listing)
-        badge = t("store_line", store=store) + ("\n" + badge if badge else "")
+        badge = t("store_line", store=store)
     display_title = (listing["title"] if current_lang() == "en"
                      else artisan["context"].get("title_hi") or listing["title"])
     await queries.set_state(artisan["id"], "awaiting_preview_approval",

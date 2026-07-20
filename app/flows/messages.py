@@ -95,7 +95,6 @@ HI = {
     "eid_issued": "बधाई हो! सरकारी पंजीकरण हो गया। ✓",
 
     "preview": "आपकी दुकान की पहली लिस्टिंग तैयार है:\n\n📦 {title_hi}\n💰 ₹{price} (पहले ₹{original_price})\n{badge}\nक्या हम इसे मीशो पर लिस्ट कर दें?",
-    "badge_verified": "✅ प्रमाणित कारीगर | GI सर्टिफ़ाइड",
     "launched": "🎉 बधाई हो! आपकी {craft} मीशो पे तैयार है! अब जब भी कोई ऑर्डर आएगा, मैं आपको यहीं बताऊँगा।",
     "redo_choice": "कोई बात नहीं। क्या बदलना चाहेंगी — कीमत, फोटो, या कुछ और? आप बोल कर भी बता सकती हैं, जैसे 'नाम बदल दो'।",
     "redo_photos": "ठीक है, इसी कलाकृति की नई साफ़ फोटो भेज दीजिए — बाकी सब कुछ वैसा ही रहेगा।",
@@ -214,7 +213,6 @@ EN = {
     "confirm_otp_spoken": "OTP {spaced} — is that right?",
     "eid_issued": "Congratulations! Government registration is complete. ✓",
     "preview": "Your store's first listing is ready:\n\n📦 {title_hi}\n💰 ₹{price} (was ₹{original_price})\n{badge}\nShall we list it on Meesho?",
-    "badge_verified": "✅ Verified Artisan | GI Certified",
     "launched": "🎉 Congratulations! Your {craft} is live on Meesho! I'll message you right here whenever an order comes in.",
     "redo_choice": "No problem. What would you like to change — the price, the photos, or something else? You can also just tell me, like 'change the name'.",
     "redo_photos": "Okay — send a new clear photo of the same piece; everything else stays the same.",

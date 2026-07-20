@@ -13,15 +13,15 @@ Write:
 1. "title": <= 70 characters, Meesho style: what it is + craft + a key motif +
    use ("wall decor", "gift"). Example: "Handmade Madhubani Painting – Peacock Wall Art"
 2. "description": 60–110 words. Structure: what it is and its motifs → the human
-   hands and tradition behind it (use GI region/tradition naturally — this is the
-   differentiator vs. factory prints) → practical details (hand-painted, colours
-   may vary slightly — frame that as the mark of a genuine handmade piece) → who
-   it's for / occasion.
+   hands and tradition behind it (use the craft's region/tradition naturally — this
+   is the differentiator vs. factory prints) → practical details (hand-painted,
+   colours may vary slightly — frame that as the mark of a genuine handmade piece)
+   → who it's for / occasion.
 3. "title_hi": the title in natural Hindi (Devanagari).
 
 Rules:
 - Never invent dimensions, materials, or facts not present in the input.
-- If gi_record is null, do NOT claim GI certification or a specific region.
-- Mention "GI-tagged craft" only when gi_record is present.
+- Never use the term "GI" or claim any certification, tag, or official status.
+- Speak of the tradition and region as craft heritage, not as a certificate.
 
 Return ONLY a JSON object: {"title": ..., "description": ..., "title_hi": ...}
