@@ -61,7 +61,7 @@ a voice note; Karigar's agents do the rest and read everything back for spoken
 confirmation before anything is saved or published. **Nothing is ever
 auto-published — a human always approves.**
 
-### AI model integration (OpenAI only, per hackathon constraint)
+### AI model integration (single-vendor OpenAI stack)
 | Capability | Model | Where |
 |---|---|---|
 | Craft ID, motif detection, authenticity forensics, document OCR | **GPT-4o Vision** | Vision agent, KYC |
@@ -283,9 +283,12 @@ directly with them.
 
 ## Known limitations (deliberate scope)
 
-- OpenAI TTS Hindi is passable but weaker than Google TTS — an accepted tradeoff
-  of the OpenAI-only constraint. `language_code` is threaded through the whole
-  pipeline, so बাংলা/தமিழ் are config + copy away, not engineering; today they
+- The voice loop is kept on a single vendor (Whisper → GPT-4o → OpenAI TTS) for
+  one auth, one latency profile, and a steerable voice that takes tone
+  instructions — a deliberate choice over mixing in Google TTS. OpenAI's Hindi
+  number pronunciation is its one weak spot, handled in code by spelling
+  identifiers (account/IFSC/pincode/OTP) digit-by-digit before they are spoken.
+  `language_code` is threaded through the whole pipeline, so बাংলা/தமিழ் are config + copy away, not engineering; today they
   return a graceful coming-soon.
 - The in-process job queue and console outbox mean a single Cloud Run instance
   (`--max-instances 1`); the production swap is Cloud Tasks + Redis.
@@ -346,6 +349,5 @@ from. All are used as **direct, unmodified** library integrations.
 | Tailwind CSS (CDN, frontends) | 3.x | MIT | Demo Console / shop / landing styling | https://github.com/tailwindlabs/tailwindcss |
 
 **Models & platforms:** OpenAI GPT-4o, GPT-4o Vision, Whisper, gpt-4o-mini-tts
-(commercial API, per hackathon rules) · Supabase (Postgres + storage) · Google
-Cloud Run (hosting). The `u2net` background-removal model shipped via rembg is
+(commercial API) · Supabase (Postgres + storage) · Google Cloud Run (hosting). The `u2net` background-removal model shipped via rembg is
 MIT-licensed.
