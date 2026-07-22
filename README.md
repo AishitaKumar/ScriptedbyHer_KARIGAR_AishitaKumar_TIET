@@ -81,7 +81,7 @@ classification. No menus, ever.
 | # | Agent | Input → Output | Tech |
 |---|---|---|---|
 | 1 | **Vision** | photo batch → craft, motifs, quality gate, authenticity score + provenance | GPT-4o Vision |
-| 2 | **Photo** | raw photo → background-removed, enhanced product image | rembg + Pillow (local, free) |
+| 2 | **Photo** | raw photo → lighting cleaned up + sharpened (kept as shot) | Pillow (local, free) |
 | 3 | **Story** | craft JSON + GI craft knowledge → Meesho-format title + Hindi/English description | GPT-4o |
 | 4 | **Pricing** | craft JSON + live comparables → price, strike-through, **in-hand amount (computed in code, never by the LLM)** | GPT-4o |
 | 5 | **Distribution** | listing package → live listing + the full order lifecycle: orders, payouts, returns, exchanges, reviews — voice-notifying on each | GPT-4o + mock Seller API |
@@ -187,9 +187,10 @@ Web Demo Console ───┘        (normalize)         │
 ```
 - **Vision is the only sequential gate** — Photo, Story, and Pricing fan out
   concurrently (`asyncio.gather`).
-- **No state in process memory** — every step lives in `artisans.onboarding_state`
-  (+ a JSONB scratch context for unconfirmed values). Kill the server mid-KYC and
-  the artisan resumes exactly where they left off.
+- **No conversation state in process memory** — every step lives in
+  `artisans.onboarding_state` (+ a JSONB scratch context for unconfirmed values).
+  Kill the server mid-KYC and the artisan resumes exactly where they left off.
+  (The background job queue and console outbox are in-memory — see limitations.)
 - **Every user-supplied fact is confirmed aloud before it is written** to a real
   column; typed values skip read-back, voice/OCR values never do.
 - Every OpenAI call retries with exponential backoff (max 2), then degrades to a
@@ -231,7 +232,7 @@ voice note, GPT-4o for intent/story/pricing/returns/trend, TTS on every reply.
 | Photo enhancement (rembg + Pillow) | **REAL** (local) | Runs in-container, no API. |
 | Supabase Postgres + storage | **REAL** | Live DB, live media URLs. |
 | Live price comparables (web search) | **REAL** | OpenAI Responses `web_search`, cached. |
-| WhatsApp Cloud API / Twilio | **REAL** (test mode) | Meta test numbers reach only whitelisted recipients — hence the Demo Console. |
+| WhatsApp Cloud API / Twilio | **BUILT** (adapter, not in live demo) | Real adapters behind the shared transport interface; they activate with a Meta test number + credentials. The **Web Demo Console** is the live transport for this demo. |
 | Meesho Seller API | **MOCK** (`app/mocks/meesho_api.py`) | No public seller sandbox exists. Karigar's code talks **only** to `app/services/meesho.py`; the mock is the swap point. |
 | GST lookup + enrolment | **MOCK** (`app/mocks/gst_*.py`) | The GST portal is captcha-protected with no public API. Called **inside** the Meesho mock ("Meesho's backend"), never by Karigar directly. Production path: Playwright form-filler pausing at OTP (documented). |
 
@@ -243,28 +244,30 @@ integration`.
 
 ## The Authenticity Engine (what stops fake sellers)
 
-Layered defense — each layer is cheap for a real artisan, expensive for a faker:
+Two checks run live in the pipeline; the rest is a documented roadmap.
 
-1. **Vision forensics (live)** — brush strokes, pigment pooling, line wobble,
-   halftone/moiré detection, plus **image provenance**: a watermarked,
-   perfectly-cropped, studio-flat image is a downloaded scan, not a phone photo of
-   a physical object, and is rejected regardless of how handmade the depicted art
-   looks. This is the primary gate in the live pipeline.
-2. **Back-of-piece challenge (built, dormant)** — the code and Vision prompt exist
-   (`vision.evaluate_back_challenge`); it is not wired into the current happy path
-   to keep the demo flow short, and can be re-enabled behind a flag.
-3. **Process interrogation by voice (prompt built, stretch)** — craft-specific
-   questions from the GI table's tradition metadata.
-4. **Duplicate detection (documented)** — pgvector embedding match across sellers.
-5. **Behavioral signals (documented)** — volume caps, geo consistency,
-   return-reason feedback, SHG/NGO attestation.
+**Built and live:**
+1. **Vision forensics + image provenance** — GPT-4o Vision looks for the tells of a
+   hand (brush strokes, pigment pooling, ink-density variation, line wobble) and
+   the machine's giveaway (flat ink, halftone/moiré, CMYK rosettes). It separately
+   judges **provenance**: a watermarked, perfectly-cropped, studio-flat image is a
+   downloaded scan, not a phone photo of a physical object, and is rejected
+   regardless of how handmade the depicted art looks. A framing gate also rejects
+   photos that don't clearly show the front of the finished piece. This is the
+   primary gate.
+2. **Same-artwork guard** — when a seller changes the photo on a listing, a second
+   Vision pass checks the new photo is the **same physical piece**, so a different
+   artwork can't be quietly substituted onto an existing listing.
 
 **Honest caveat:** this raises the cost of faking; it does not make it impossible.
-A fraudster owning one real painting can pass onboarding — Layers 4–5 are the
-production roadmap that catches that pattern over time. Validation:
+A fraudster who owns one real painting can still pass onboarding. Validation:
 `scripts/01_vision_killshot.py` separates real Madhubani photos from print-seller
-images. Tuned and validated for **Madhubani (deep)** and **Warli (shallow)**; the
-pipeline itself is craft-agnostic across the 10 GI crafts.
+images; tuned primarily for **Madhubani** (with Warli), while the pipeline itself
+handles whatever craft the Vision agent identifies.
+
+**Designed, not built (see Future work):** cross-seller duplicate detection
+(pgvector embeddings) and behavioral-signal checks. A back-of-piece challenge was
+prototyped earlier but is not wired into the current flow.
 
 ---
 
@@ -283,16 +286,15 @@ directly with them.
 
 ## Known limitations (deliberate scope)
 
-- The voice loop is kept on a single vendor (Whisper → GPT-4o → OpenAI TTS) for
-  one auth, one latency profile, and a steerable voice that takes tone
-  instructions — a deliberate choice over mixing in Google TTS. OpenAI's Hindi
-  number pronunciation is its one weak spot, handled in code by spelling
-  identifiers (account/IFSC/pincode/OTP) digit-by-digit before they are spoken.
-  `language_code` is threaded through the whole pipeline, so बাংলা/தமিழ் are config + copy away, not engineering; today they
-  return a graceful coming-soon.
+- Only **Hindi (full pipeline) + English (listing output)** are live today; other
+  languages are a translation effort, not new architecture, since `language_code`
+  threads through the whole pipeline (STT → agents → TTS → copy). The voice loop
+  is single-vendor OpenAI — a deliberate choice for one auth/latency and a
+  tone-steerable voice over mixing in Google TTS; OpenAI's weaker Hindi number
+  pronunciation is handled in code by spelling identifiers
+  (account/IFSC/pincode/OTP) digit-by-digit before they are spoken.
 - The in-process job queue and console outbox mean a single Cloud Run instance
   (`--max-instances 1`); the production swap is Cloud Tasks + Redis.
-- Authenticity Engine Layers 4–5 are designed and documented, not built.
 
 ---
 
@@ -302,8 +304,7 @@ The architecture was built so each of these is an extension, not a rewrite.
 
 **1. More languages.** `language_code` is already threaded through the entire
 pipeline (STT → agents → TTS → copy), so adding **Bengali and Tamil** — then the
-other major Indian languages — is prompts + message copy, not engineering. The
-বাংলা/தமிழ் buttons already exist behind a graceful coming-soon.
+other major Indian languages — is prompts + message copy, not engineering. A graceful coming-soon already handles requests for other languages.
 
 **2. Real GI authentication.** Today the GI craft knowledge is a curated table
 and authenticity is Vision forensics. Next is a genuine **GI verification
